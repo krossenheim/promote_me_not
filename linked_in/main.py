@@ -1,4 +1,5 @@
 import time
+from typing import Any
 from common.jobposting import JobPosting
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
@@ -9,6 +10,8 @@ from common.common import get_browser
 from common.secret import PASSWORD
 from common.urls import LINKEDIN_LOGIN, LINKEDIN_JOBS
 from cookies_store import cookies_get, cookies_load
+import re
+
 
 def verified_human(br: Chrome):
     return "Let's do a quick security check" not in br.page_source
@@ -45,7 +48,7 @@ def lk_login(br: Chrome, u='jleonardola@gmail.com', p=PASSWORD) -> bool:
     return True
 
 
-def zoom_out(br: Chrome):
+def zoom_out(br: Chrome) -> None:
     br.execute_script("document.getElementsByClassName('scaffold-layout__list')[0].style.zoom = 0.5")
 
 
@@ -63,28 +66,44 @@ def next_page(pagination_box: WebElement) -> bool:
     return False
 
 
-def get_job_posting(job_details: WebElement):
-    title = job_details.find_element(By.CLASS_NAME, "jobs-unified-top-card__job-title")
-    posted_date = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__posted-date')
+def get_job_posting(job_id: Any, job_details: WebElement) -> JobPosting:
+    title = job_details.find_element(By.CLASS_NAME, "jobs-unified-top-card__job-title").text
+    posted_date = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__posted-date').text
+    company_name = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text
     try:
-        applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count')
+        applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count').text
     except NoSuchElementException:
         applicants = 0
-    workplace_type = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type')
-    company_size = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__job-insight')
-    job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text')
-    job = JobPosting(title, posted_date, applicants, workplace_type, company_size, job_description)
+    try:
+        workplace_type = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type').text
+    except NoSuchElementException:
+        workplace_type = "Not stated"
+    company_size = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__job-insight').text
+    job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
+    job = JobPosting(
+        job_id,
+        title,
+        posted_date,
+        company_name,
+        applicants,
+        workplace_type,
+        company_size,
+        job_description)
     return job
 
 
 def main():
-    br = get_browser(kill_chrome = True)
+    br = get_browser()
+    br.set_window_size(1920, 2048)
+    br.get(LINKEDIN_LOGIN)
     cookies_load(br)
-    lk_login(br)
+    br.get(LINKEDIN_LOGIN)
+    if not is_logged_in(br):
+        lk_login(br)
     br.get(LINKEDIN_JOBS)
+    time.sleep(2)
 
-    # zoom_out(br)
-    # time.sleep(1)
+    # Close the chat.
 
     listings = list()
 
@@ -97,12 +116,14 @@ def main():
             if 'Refine by title' in item.text:
                 continue
             # Clicking the middle of the element sometimes hits a link instead, this avoids that.
-            attempts = 5
+
             try:
                 br.execute_script(
                     f"document.getElementsByClassName('job-card-list__title')[{n - 1}].scrollIntoView(true)")
             except JavascriptException as e:
-                print(f"{str(e)} | IGNORED")
+                print(f"JavascriptException: IGNORED")
+
+            attempts = 5
             while attempts:
                 try:
                     item.find_element(By.CLASS_NAME, 'job-card-list__title').click()
@@ -119,17 +140,17 @@ def main():
                 time.sleep(0.5)
                 details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
                 if not attempts:
-                    break
+                    raise RuntimeError("Mistakes were made 2.")
                 try:
-                    job = get_job_posting(details)
+                    job_id = re.search(r"currentJobId=(.+?)&", br.current_url)
+                    job = get_job_posting(job_id, details)
                     listings.append(job)
                     break
                 except Exception as e:
                     print(str(e))
                     attempts -= 1
-            if not attempts:
-                raise RuntimeError("Mistakes were made 2.")
 
+        time.sleep(0.5)
         pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
         next_page(pagination_box)
         time.sleep(2)

@@ -1,7 +1,10 @@
 class JobPosting:
-    def __init__(self, title, posted_date, applicants, workplace_type, company_size, job_description):
+    def __init__(self, job_id, title, posted_date, company_name, applicants, workplace_type, company_size,
+                 job_description):
+        self.job_id = job_id
         self.title = title
         self.posted_date = posted_date
+        self.company_name = company_name
         self.applicants = applicants
         self.workplace_type = workplace_type
         self.company_size = company_size
