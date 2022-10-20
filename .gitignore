@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 .idea/
 cookies/
+jobs/
 # C extensions
 *.so
 secret.py

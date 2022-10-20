@@ -6,12 +6,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import JavascriptException, NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
-from common.common import get_browser
+from common.common import get_browser, create_destination_folders
 from common.secret import PASSWORD
 from common.urls import LINKEDIN_LOGIN, LINKEDIN_JOBS
 from cookies_store import cookies_get, cookies_load
 import re
 
+WEBSITE_ALIAS = "linked_in"
 
 def verified_human(br: Chrome):
     return "Let's do a quick security check" not in br.page_source
@@ -66,7 +67,7 @@ def next_page(pagination_box: WebElement) -> bool:
     return False
 
 
-def get_job_posting(job_id: Any, job_details: WebElement) -> JobPosting:
+def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> JobPosting:
     title = job_details.find_element(By.CLASS_NAME, "jobs-unified-top-card__job-title").text
     posted_date = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__posted-date').text
     company_name = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text
@@ -88,11 +89,13 @@ def get_job_posting(job_id: Any, job_details: WebElement) -> JobPosting:
         applicants,
         workplace_type,
         company_size,
-        job_description)
+        job_description,
+        site_name)
     return job
 
 
 def main():
+    create_destination_folders(WEBSITE_ALIAS)
     br = get_browser()
     br.set_window_size(1920, 2048)
     br.get(LINKEDIN_LOGIN)
@@ -142,8 +145,9 @@ def main():
                 if not attempts:
                     raise RuntimeError("Mistakes were made 2.")
                 try:
-                    job_id = re.search(r"currentJobId=(.+?)&", br.current_url)
-                    job = get_job_posting(job_id, details)
+                    job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
+                    job = get_job_posting(job_id, WEBSITE_ALIAS, details)
+                    job.save()
                     listings.append(job)
                     break
                 except Exception as e:
