@@ -5,3 +5,6 @@ class JobPosting:
         self.workplace_type = workplace_type
         self.company_size = company_size
         self.job_description = job_description
+
+    def __str__(self):
+        return self.posted_date

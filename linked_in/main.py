@@ -64,20 +64,23 @@ def main():
 
     # jobs_search_results = br.find_element(By.CLASS_NAME, 'jobs-search-results-list')
 
-    xpaths = [
-        '//li[1][@id="id"]',
-        '//div[1]/a',
-
-    ]
     while True:
-        visible_cards = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container').find_elements(By.XPATH, "*")
-        for item in visible_cards:
-            # Clicking the middle of the element sometimes hits a link instead, this avoids that.
-            try:
-                item.find_element(By.CLASS_NAME, 'job-card-list__title').click()
-            except Exception as e:
-                print(f"{str(e)} Failed on item{item.text}")
+        container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
+        visible_cards = container.find_elements(By.XPATH, "*")
+        for n,item in enumerate(visible_cards):
+            if 'Refine by title' in item.text:
                 continue
+            # Clicking the middle of the element sometimes hits a link instead, this avoids that.
+            attempts = 5
+            while True:
+                try:
+                    br.execute_script(f"document.getElementsByClassName('job-card-list__title')[{n}].scrollIntoView(true)")
+                    item.find_element(By.CLASS_NAME, 'job-card-list__title').click()
+                    break
+                except Exception as e:
+                    print(f"Failed on item{item.text}. Retrying in {6-attempts}")
+                    time.sleep(6-attempts)
+                    attempts -=1
             time.sleep(1)
             details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
             max_try = 4
@@ -93,7 +96,7 @@ def main():
 
         pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
         next_page(pagination_box)
-
+        time.sleep(2)
     #     press_next = True
 
 
