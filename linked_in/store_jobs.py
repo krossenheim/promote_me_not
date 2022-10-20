@@ -6,13 +6,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import JavascriptException, NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
-from common.common import get_browser, create_destination_folders
+from common.common import get_browser
 from common.secret import PASSWORD
-from common.urls import LINKEDIN_LOGIN, LINKEDIN_JOBS
+from linked_in.site_info import LINKEDIN_LOGIN, LINKEDIN_JOBS, WEBSITE_ALIAS
 from cookies_store import cookies_get, cookies_load
 import re
 
-WEBSITE_ALIAS = "linked_in"
 
 def verified_human(br: Chrome):
     return "Let's do a quick security check" not in br.page_source
@@ -95,7 +94,6 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
 
 
 def main():
-    create_destination_folders(WEBSITE_ALIAS)
     br = get_browser()
     br.set_window_size(1920, 2048)
     br.get(LINKEDIN_LOGIN)
