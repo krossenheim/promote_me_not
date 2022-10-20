@@ -1,31 +1,51 @@
 import time
 from common.jobposting import JobPosting
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import JavascriptException
+from selenium.common.exceptions import JavascriptException, NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
+from common.common import get_browser
+from common.secret import PASSWORD
+from common.urls import LINKEDIN_LOGIN, LINKEDIN_JOBS
+from cookies_store import cookies_get, cookies_load
 
-url_li = "https://www.linkedin.com/jobs/search/?geoId=91000000&keywords=python&start=0"
+def verified_human(br: Chrome):
+    return "Let's do a quick security check" not in br.page_source
 
 
-def get_browser():
-    br = webdriver.Chrome(executable_path=ChromeDriverManager().install())
-    br.set_window_size(1600, 12000)
-    return br
+def is_logged_in(br: Chrome, max_tries=4):
+    for attempt in range(0, max_tries + 1):
+        try:
+            br.find_element(By.CLASS_NAME, 'ember-application')
+            print("User logged in, grabbing cookies.")
+            return True
+        except:
+            if attempt == max_tries:
+                return False
+            sleep_time = min((5, max_tries + 0.5 - attempt))
+            print(f"Retrying in {sleep_time} seconds")
+            time.sleep(sleep_time)
 
 
-def lk_login(br: webdriver.Chrome, u='jleonardola@gmail.com', p='lkverysecure123') -> bool:
-    br.get('https://www.linkedin.com/login')
+def lk_login(br: Chrome, u='jleonardola@gmail.com', p=PASSWORD) -> bool:
+    br.get(LINKEDIN_LOGIN)
     br.find_element(By.ID, 'username').send_keys(u)
     pbox = br.find_element(By.ID, 'password')
     pbox.send_keys(p)
     pbox.send_keys(Keys.ENTER)
+    if not is_logged_in(br):
+        if not verified_human(br):
+            print(f"User is not verified as human, will continue once that's done.")
+        while not verified_human(br):
+            pass
+        time.sleep(4)
+        cookies_get(br)
+
     return True
 
 
-def zoom_out(br: webdriver.Chrome):
+def zoom_out(br: Chrome):
     br.execute_script("document.getElementsByClassName('scaffold-layout__list')[0].style.zoom = 0.5")
 
 
@@ -46,7 +66,10 @@ def next_page(pagination_box: WebElement) -> bool:
 def get_job_posting(job_details: WebElement):
     title = job_details.find_element(By.CLASS_NAME, "jobs-unified-top-card__job-title")
     posted_date = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__posted-date')
-    applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count')
+    try:
+        applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count')
+    except NoSuchElementException:
+        applicants = 0
     workplace_type = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type')
     company_size = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__job-insight')
     job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text')
@@ -55,9 +78,10 @@ def get_job_posting(job_details: WebElement):
 
 
 def main():
-    br = get_browser()
+    br = get_browser(kill_chrome = True)
+    cookies_load(br)
     lk_login(br)
-    br.get(url_li)
+    br.get(LINKEDIN_JOBS)
 
     # zoom_out(br)
     # time.sleep(1)
@@ -101,6 +125,7 @@ def main():
                     listings.append(job)
                     break
                 except Exception as e:
+                    print(str(e))
                     attempts -= 1
             if not attempts:
                 raise RuntimeError("Mistakes were made 2.")
