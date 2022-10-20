@@ -8,13 +8,19 @@ from selenium.common.exceptions import JavascriptException, NoSuchElementExcepti
 from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser
 from common.secret import PASSWORD
-from linked_in.site_info import LINKEDIN_LOGIN, LINKEDIN_JOBS, WEBSITE_ALIAS
+from linked_in.site_info import LOGIN, JOBS, WEBSITE_ALIAS
 from cookies_store import cookies_get, cookies_load
 import re
 
 
 def verified_human(br: Chrome):
-    return "Let's do a quick security check" not in br.page_source
+    for _ in range(0,4):
+        try:
+            br.find_element(By.ID, 'captchaInternalPath')
+            return False
+        except NoSuchElementException:
+            time.sleep(0.5)
+    return True
 
 
 def is_logged_in(br: Chrome, max_tries=4):
@@ -32,7 +38,7 @@ def is_logged_in(br: Chrome, max_tries=4):
 
 
 def lk_login(br: Chrome, u='jleonardola@gmail.com', p=PASSWORD) -> bool:
-    br.get(LINKEDIN_LOGIN)
+    br.get(LOGIN)
     br.find_element(By.ID, 'username').send_keys(u)
     pbox = br.find_element(By.ID, 'password')
     pbox.send_keys(p)
@@ -96,12 +102,12 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
 def main():
     br = get_browser()
     br.set_window_size(1920, 2048)
-    br.get(LINKEDIN_LOGIN)
+    br.get(LOGIN)
     cookies_load(br)
-    br.get(LINKEDIN_LOGIN)
+    br.get(LOGIN)
     if not is_logged_in(br):
         lk_login(br)
-    br.get(LINKEDIN_JOBS)
+    br.get(JOBS)
     time.sleep(2)
 
     # Close the chat.
