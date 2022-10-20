@@ -4,6 +4,7 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import JavascriptException
 from selenium.webdriver.remote.webelement import WebElement
 
 url_li = "https://www.linkedin.com/jobs/search/?geoId=91000000&keywords=python&start=0"
@@ -43,12 +44,13 @@ def next_page(pagination_box: WebElement) -> bool:
 
 
 def get_job_posting(job_details: WebElement):
+    title = job_details.find_element(By.CLASS_NAME, "jobs-unified-top-card__job-title")
     posted_date = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__posted-date')
     applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count')
     workplace_type = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type')
     company_size = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__job-insight')
     job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text')
-    job = JobPosting(posted_date, applicants, workplace_type, company_size, job_description)
+    job = JobPosting(title, posted_date, applicants, workplace_type, company_size, job_description)
     return job
 
 
@@ -67,32 +69,41 @@ def main():
     while True:
         container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
         visible_cards = container.find_elements(By.XPATH, "*")
-        for n,item in enumerate(visible_cards):
+        for n, item in enumerate(visible_cards):
             if 'Refine by title' in item.text:
                 continue
             # Clicking the middle of the element sometimes hits a link instead, this avoids that.
             attempts = 5
-            while True:
+            try:
+                br.execute_script(
+                    f"document.getElementsByClassName('job-card-list__title')[{n - 1}].scrollIntoView(true)")
+            except JavascriptException as e:
+                print(f"{str(e)} | IGNORED")
+            while attempts:
                 try:
-                    br.execute_script(f"document.getElementsByClassName('job-card-list__title')[{n}].scrollIntoView(true)")
                     item.find_element(By.CLASS_NAME, 'job-card-list__title').click()
                     break
                 except Exception as e:
-                    print(f"Failed on item{item.text}. Retrying in {6-attempts}")
-                    time.sleep(6-attempts)
-                    attempts -=1
-            time.sleep(1)
-            details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
-            max_try = 4
+                    print(f"Failed on item{item.text}. Retrying in {6 - attempts}")
+                    time.sleep(6 - attempts)
+                    attempts -= 1
+            if not attempts:
+                raise RuntimeError("Mistakes were made.")
+
+            attempts = 4
             while True:
-                if not max_try:
+                time.sleep(0.5)
+                details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
+                if not attempts:
                     break
                 try:
                     job = get_job_posting(details)
                     listings.append(job)
                     break
-                except:
-                    max_try -= 1
+                except Exception as e:
+                    attempts -= 1
+            if not attempts:
+                raise RuntimeError("Mistakes were made 2.")
 
         pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
         next_page(pagination_box)
