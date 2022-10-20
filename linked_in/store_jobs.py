@@ -13,7 +13,7 @@ from cookies_store import cookies_get, cookies_load
 import re
 
 
-def verified_human(br: Chrome):
+def verified_human(br: Chrome) -> bool:
     for _ in range(0,4):
         try:
             br.find_element(By.ID, 'captchaInternalPath')
@@ -23,7 +23,7 @@ def verified_human(br: Chrome):
     return True
 
 
-def is_logged_in(br: Chrome, max_tries=4):
+def is_logged_in(br: Chrome, max_tries=4) -> bool:
     for attempt in range(0, max_tries + 1):
         try:
             br.find_element(By.CLASS_NAME, 'ember-application')
@@ -99,7 +99,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
     return job
 
 
-def main():
+def main() -> None:
     br = get_browser()
     br.set_window_size(1920, 2048)
     br.get(LOGIN)

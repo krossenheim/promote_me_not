@@ -5,7 +5,7 @@ import pickle
 __cookies_path = "../cookies/linked_in_cookies.pkl"
 
 
-def cookies_get(br: Chrome):
+def cookies_get(br: Chrome) -> None:
     pickle.dump(br.get_cookies(), open(__cookies_path, "wb"))
 
 
