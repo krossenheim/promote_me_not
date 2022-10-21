@@ -180,11 +180,12 @@ def main() -> None:
 
         time.sleep(0.5)
         pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
-        next_page(pagination_box)
+        if not next_page(pagination_box):
+            print("Reached last page on LinkedIn")
+            exit()
         time.sleep(2)
     #     press_next = True
 
 
 if __name__ == "__main__":
     main()
-    print(1)
