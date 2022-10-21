@@ -1,5 +1,6 @@
 import pickle
 import datetime
+from common.common import create_destination_folders
 
 UNIT_VALUES = {
     'seconds': 1,
@@ -37,11 +38,19 @@ class JobPosting:
         self.description = job_description
         self.location = location
         assert isinstance(site_name, str)
-        self.__save_to_path = f'../jobs/{site_name}/{self.job_id}'
+        self.site_name = site_name
 
     def __str__(self):
         return f"{self.title} - {self.job_id}"
 
-    def save(self):
+    @property
+    def __save_to_path(self) -> str:
+        return f'../jobs/{self.site_name}/{self.job_id}'
+
+    def save(self) -> None:
         print(f"saving {self}")
-        pickle.dump(self, open(self.__save_to_path, "wb"))
+        try:
+            with open(self.__save_to_path, "wb") as f:
+                pickle.dump(self, f)
+        except FileNotFoundError:
+            create_destination_folders(self.site_name)
