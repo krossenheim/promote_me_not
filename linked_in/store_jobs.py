@@ -14,7 +14,7 @@ import re
 
 
 def verified_human(br: Chrome) -> bool:
-    for _ in range(0,4):
+    for _ in range(0, 4):
         try:
             br.find_element(By.ID, 'captchaInternalPath')
             return False
@@ -83,9 +83,11 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
     try:
         workplace_type = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type').text
     except NoSuchElementException:
-        workplace_type = "Not stated"
+        workplace_type = "Unspecified"
     company_size = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__job-insight').text
     job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
+    location = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet').text
+
     job = JobPosting(
         job_id,
         title,
@@ -95,7 +97,8 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
         workplace_type,
         company_size,
         job_description,
-        site_name)
+        site_name,
+        location)
     return job
 
 
@@ -109,12 +112,6 @@ def main() -> None:
         lk_login(br)
     br.get(JOBS)
     time.sleep(2)
-
-    # Close the chat.
-
-    listings = list()
-
-    # jobs_search_results = br.find_element(By.CLASS_NAME, 'jobs-search-results-list')
 
     while True:
         container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
@@ -152,7 +149,6 @@ def main() -> None:
                     job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
                     job = get_job_posting(job_id, WEBSITE_ALIAS, details)
                     job.save()
-                    listings.append(job)
                     break
                 except Exception as e:
                     print(str(e))
