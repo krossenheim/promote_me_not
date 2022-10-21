@@ -1,17 +1,41 @@
 import pickle
+import datetime
+
+UNIT_VALUES = {
+    'seconds': 1,
+    'second': 1,
+    'minutes': 60,
+    'minute': 60,
+    'hour': 60 * 60,
+    'hours': 60 * 60,
+    'day': 60 * 24 * 60,
+    'days': 60 * 24 * 60,
+    'week': 60 * 24 * 60 * 7,
+    'weeks': 60 * 24 * 60 * 7,
+    'month': 60 * 24 * 60 * 7 * 30,
+    'months': 60 * 24 * 60 * 7 * 30,
+}
 
 
 class JobPosting:
     def __init__(self, job_id, title, posted_date, company_name, applicants, workplace_type, company_size,
-                 job_description, site_name):
+                 job_description, site_name, location):
         self.job_id = job_id
-        self.title = title
+        self.retrieval_date = datetime.datetime.now()
+
+        magnitude, unit, _ = posted_date.split(" ")
+        unit_seconds = UNIT_VALUES[unit]
+        posted_date = datetime.datetime.now() - datetime.timedelta(seconds=unit_seconds * int(magnitude))
+
         self.posted_date = posted_date
+
+        self.title = title
         self.company_name = company_name
         self.applicants = applicants
         self.workplace_type = workplace_type
         self.company_size = company_size
-        self.job_description = job_description
+        self.description = job_description
+        self.location = location
         assert isinstance(site_name, str)
         self.__save_to_path = f'../jobs/{site_name}/{self.job_id}'
 
