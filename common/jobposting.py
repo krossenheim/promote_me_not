@@ -3,6 +3,7 @@ import datetime
 from common.common import create_destination_folders
 from linked_in.site_info import WEBSITE_ALIAS as LINKED_IN_WEBSITE_ALIAS
 
+
 class JobPosting:
     def __init__(self, job_id, title, posted_date, company_name, applicants, workplace_type, company_size,
                  job_description, site_name, location):
@@ -20,7 +21,7 @@ class JobPosting:
         self.location = location
         assert isinstance(site_name, str)
         self.site_name = site_name
-        # Consider assigning the job posting's language here instead of removing it elsewhere
+        # Consider assigning the job posting's language here instead of checking it elsewhere
 
     def __str__(self):
         return f"{self.title} - {self.job_id}"
