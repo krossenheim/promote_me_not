@@ -10,7 +10,23 @@ from common.common import get_browser
 from common.secret import PASSWORD
 from linked_in.site_info import LOGIN, JOBS, WEBSITE_ALIAS
 from cookies_store import cookies_get, cookies_load
+import datetime
 import re
+
+UNIT_VALUES = {
+    'seconds': 1,
+    'second': 1,
+    'minutes': 60,
+    'minute': 60,
+    'hour': 60 * 60,
+    'hours': 60 * 60,
+    'day': 60 * 24 * 60,
+    'days': 60 * 24 * 60,
+    'week': 60 * 24 * 60 * 7,
+    'weeks': 60 * 24 * 60 * 7,
+    'month': 60 * 24 * 60 * 7 * 30,
+    'months': 60 * 24 * 60 * 7 * 30,
+}
 
 
 def verified_human(br: Chrome) -> bool:
@@ -75,6 +91,11 @@ def next_page(pagination_box: WebElement) -> bool:
 def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> JobPosting:
     title = job_details.find_element(By.CLASS_NAME, "jobs-unified-top-card__job-title").text
     posted_date = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__posted-date').text
+
+    magnitude, unit, _ = posted_date.split(" ")
+    unit_seconds = UNIT_VALUES[unit]
+    posted_date = datetime.datetime.now() - datetime.timedelta(seconds=unit_seconds * int(magnitude))
+
     company_name = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text
     try:
         applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count').text
