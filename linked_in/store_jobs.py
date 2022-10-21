@@ -78,7 +78,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
     company_name = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text
     try:
         applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count').text
-        applicants, _ = applicants.split(" ")[0]
+        applicants = int(applicants.split(" ")[0])
 
     except NoSuchElementException:
         applicants = 0
