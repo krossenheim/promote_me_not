@@ -146,8 +146,8 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
     return job
 
 
-def main() -> None:
-    br = get_browser()
+def main(br) -> None:
+
     br.set_window_size(1920, 2048)
     br.get(LOGIN)
     cookies_load(br)
@@ -209,4 +209,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    br = get_browser()
+    try:
+        main(br)
+    finally:
+        br.close()
