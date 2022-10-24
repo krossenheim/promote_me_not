@@ -8,6 +8,7 @@ jobs/
 # C extensions
 *.so
 secret.py
+*migrations/
 # Distribution / packaging
 .Python
 build/
