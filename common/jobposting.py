@@ -6,8 +6,19 @@ from langdetect import detect
 
 
 class JobPosting:
-    def __init__(self, job_id, title, posted_date, company_name, applicants, workplace_type, company_size, company_type,
-                 full_time_or_other, job_description, site_name, location, entry_level):
+    def __init__(self, job_id,
+                 title,
+                 posted_date,
+                 company_name,
+                 applicants,
+                 workplace_type,
+                 company_size,
+                 company_type,
+                 full_time_or_other,
+                 job_description,
+                 site_name,
+                 location,
+                 entry_level):
         self.job_id = job_id
         self.retrieval_date = datetime.datetime.now()
 
