@@ -35,7 +35,8 @@ class JobPosting:
     def language_posted(self):
         if self.__language_posted is None:
             self.__language_posted = detect(self.description)
-            self.save()
+            print(f"Language: {self.__language_posted} -- Now saving {self.job_id}.")
+            self.save(verbose=False)
         return self.__language_posted
 
     @property
@@ -48,8 +49,9 @@ class JobPosting:
     def __save_to_path(self) -> str:
         return f'../jobs/{self.site_name}/{self.job_id}'
 
-    def save(self) -> None:
-        print(f"saving {self}")
+    def save(self, verbose=True) -> None:
+        if verbose:
+            print(f"saving {self}")
         try:
             with open(self.__save_to_path, "wb") as f:
                 pickle.dump(self, f)
