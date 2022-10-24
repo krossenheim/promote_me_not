@@ -1,5 +1,5 @@
 from django.db import models
-
+import datetime
 
 # Create your models here.
 class JobPosting(models.Model):
@@ -18,6 +18,12 @@ class JobPosting(models.Model):
     site_scraped_from = models.TextField(null=True, blank=True)
     entry_level = models.TextField(null=True, blank=True)
     language_of_description = models.CharField(max_length=2, null=True, blank=True)
+
+    def update(self,other):
+        print(f"Updating {self}")
+        self.retrieval_date = datetime.datetime.now()
+        self.applicants = other.applicants
+        self.save()
 
     def __repr__(self):
         return f"{self.title} - {self.job_id}"

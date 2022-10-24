@@ -139,6 +139,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
     job = JobPosting(
         job_id=job_id,
         title=title,
+        retrieval_date = datetime.datetime.now(),
         posted_date=posted_date,
         company_name=company_name,
         applicants=applicants,
@@ -199,10 +200,11 @@ def main(br) -> None:
                     try:
                         job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
                         job = get_job_posting(job_id, WEBSITE_ALIAS, details)
-                        if not JobPosting.objects.filter(job_id=job_id):
-                            job.save()
+                        may_exist = JobPosting.objects.filter(job_id=job_id)
+                        if not may_exist:
+                            job.update()
                         else:
-                            print(f"Not saving {job}, already exists.")
+                            may_exist.update(job)
                         break
                     except Exception as e:
                         print(str(e))
