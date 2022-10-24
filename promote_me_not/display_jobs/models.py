@@ -19,6 +19,7 @@ class JobPosting(models.Model):
     entry_level = models.TextField(null=True, blank=True)
     language_of_description = models.CharField(max_length=2, null=True, blank=True)
 
+
     def update(self,other):
         print(f"Updating {self}")
         self.retrieval_date = datetime.datetime.now()

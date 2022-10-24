@@ -204,7 +204,7 @@ def main(br) -> None:
                         if not may_exist:
                             job.update()
                         else:
-                            may_exist.update(job)
+                            may_exist[0].update(job)
                         break
                     except Exception as e:
                         print(str(e))
