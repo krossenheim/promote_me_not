@@ -14,6 +14,7 @@ def cookies_get(br: Chrome) -> None:
 def cookies_load(br: Chrome) -> bool:
     try:
         cookies = pickle.load(open(__cookies_path, "rb"))
+        print("Loaded cookies.")
     except (EOFError, FileNotFoundError):
         print("No cookies saved, file is empty.")
         return False
