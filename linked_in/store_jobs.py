@@ -168,8 +168,8 @@ def main() -> None:
             try:
                 br.execute_script(
                     f"document.getElementsByClassName('job-card-list__title')[{n - 1}].scrollIntoView(true)")
-            except JavascriptException as e:
-                print(f"JavascriptException: IGNORED")
+            except JavascriptException:
+                print(f"JavascriptException when scrolling element into view: IGNORED")
 
             attempts = 5
             while attempts:
