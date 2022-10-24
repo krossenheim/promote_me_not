@@ -8,7 +8,7 @@ from selenium.common.exceptions import JavascriptException, NoSuchElementExcepti
 from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser
 from common.secret import PASSWORD
-from linked_in.site_info import LOGIN, JOBS, WEBSITE_ALIAS
+from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS
 from cookies_store import cookies_get, cookies_load
 import datetime
 import re
@@ -69,10 +69,6 @@ def lk_login(br: Chrome, u='jleonardola@gmail.com', p=PASSWORD) -> bool:
     cookies_get(br)
 
     return True
-
-
-def zoom_out(br: Chrome) -> None:
-    br.execute_script("document.getElementsByClassName('scaffold-layout__list')[0].style.zoom = 0.5")
 
 
 def next_page(pagination_box: WebElement) -> bool:
@@ -147,65 +143,65 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
 
 
 def main(br) -> None:
-
     br.set_window_size(1920, 2048)
     br.get(LOGIN)
     cookies_load(br)
     br.get(LOGIN)
     if not is_logged_in(br):
         lk_login(br)
-    br.get(JOBS)
-    time.sleep(2)
-
-    while True:
-        container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
-        visible_cards = container.find_elements(By.XPATH, "*")
-        for n, item in enumerate(visible_cards):
-            if 'Refine by title' in item.text:
-                continue
-            # Clicking the middle of the element sometimes hits a link instead, this avoids that.
-
-            try:
-                br.execute_script(
-                    f"document.getElementsByClassName('job-card-list__title')[{n - 1}].scrollIntoView(true)")
-            except JavascriptException:
-                print(f"JavascriptException when scrolling element into view: IGNORED")
-
-            attempts = 5
-            while attempts:
-                try:
-                    item.find_element(By.CLASS_NAME, 'job-card-list__title').click()
-                    break
-                except Exception as e:
-                    print(f"Failed on item{item.text}. Retrying in {6 - attempts}")
-                    time.sleep(6 - attempts)
-                    attempts -= 1
-            if not attempts:
-                raise RuntimeError("Mistakes were made.")
-
-            attempts = 4
-            while True:
-                time.sleep(0.5)
-                details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
-                if not attempts:
-                    raise RuntimeError("Mistakes were made 2.")
-                try:
-                    job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
-                    job = get_job_posting(job_id, WEBSITE_ALIAS, details)
-                    job.save()
-                    break
-                except Exception as e:
-                    print(str(e))
-                    attempts -= 1
-                    time.sleep(4 - attempts)
-
-        time.sleep(0.5)
-        pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
-        if not next_page(pagination_box):
-            print("Reached last page on LinkedIn")
-            exit()
+    for link in SEARCH_LINKS:
+        br.get(link)
         time.sleep(2)
-    #     press_next = True
+
+        while True:
+            container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
+            visible_cards = container.find_elements(By.XPATH, "*")
+            for n, item in enumerate(visible_cards):
+                if 'Refine by title' in item.text:
+                    continue
+                # Clicking the middle of the element sometimes hits a link instead, this avoids that.
+
+                try:
+                    br.execute_script(
+                        f"document.getElementsByClassName('job-card-list__title')[{n - 1}].scrollIntoView(true)")
+                except JavascriptException:
+                    print(f"JavascriptException when scrolling element into view: IGNORED")
+
+                attempts = 5
+                while attempts:
+                    try:
+                        item.find_element(By.CLASS_NAME, 'job-card-list__title').click()
+                        break
+                    except Exception as e:
+                        print(f"Failed on item{item.text}. Retrying in {6 - attempts}")
+                        time.sleep(6 - attempts)
+                        attempts -= 1
+                if not attempts:
+                    raise RuntimeError("Mistakes were made.")
+
+                attempts = 4
+                while True:
+                    time.sleep(0.5)
+                    details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
+                    if not attempts:
+                        raise RuntimeError("Mistakes were made 2.")
+                    try:
+                        job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
+                        job = get_job_posting(job_id, WEBSITE_ALIAS, details)
+                        job.save()
+                        break
+                    except Exception as e:
+                        print(str(e))
+                        attempts -= 1
+                        time.sleep(4 - attempts)
+
+            time.sleep(0.5)
+            pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
+            if not next_page(pagination_box):
+                print("Reached last page on LinkedIn")
+                return
+            time.sleep(2)
+        #     press_next = True
 
 
 if __name__ == "__main__":
