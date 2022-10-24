@@ -28,7 +28,8 @@ def keep_languages(jobs: list, languages_to_keep: iter, verbose=True) -> dict:
     """
     removed_jobs = dict()
     for n, job in enumerate(jobs):
-        lang = detect(job.description)
+        assert isinstance(job, JobPosting)
+        lang = job.language_posted
         if lang not in removed_jobs.keys() and lang not in languages_to_keep:
             removed_jobs[lang] = list()
         if lang not in languages_to_keep:
@@ -41,9 +42,9 @@ def keep_languages(jobs: list, languages_to_keep: iter, verbose=True) -> dict:
     total = 0
     if verbose:
         for lang, _removed_jobs in removed_jobs.items():
-            total+=len(_removed_jobs)
+            total += len(_removed_jobs)
             print(f"{len(_removed_jobs)} '{lang}' entries.")
-    print(f"Total: {total}")
+    print(f"Total removed due to languages: {total}")
 
     return removed_jobs
 
@@ -62,7 +63,6 @@ def main():
     wanted_languages = 'en,nl,es'.split(",")
     lang_removed_jobs = keep_languages(jobs, wanted_languages)
 
-    exit()
     for job in jobs:
         assert isinstance(job, JobPosting)
         for word, matches in jobs_description_contain.items():

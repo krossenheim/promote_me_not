@@ -44,12 +44,13 @@ def is_logged_in(br: Chrome, max_tries=4) -> bool:
         try:
             br.find_element(By.CLASS_NAME, 'ember-application')
             print("User logged in, grabbing cookies.")
+            cookies_get(br)
             return True
         except:
             if attempt == max_tries:
                 return False
             sleep_time = min((5, max_tries + 0.5 - attempt))
-            print(f"Retrying in {sleep_time} seconds")
+            print(f"Rechecking user is logged-in; in {sleep_time} seconds")
             time.sleep(sleep_time)
 
 
@@ -65,7 +66,7 @@ def lk_login(br: Chrome, u='jleonardola@gmail.com', p=PASSWORD) -> bool:
         while not verified_human(br):
             pass
         time.sleep(4)
-        cookies_get(br)
+    cookies_get(br)
 
     return True
 
@@ -108,8 +109,24 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
         workplace_type = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type').text
     except NoSuchElementException:
         workplace_type = "Unspecified"
-    company_size = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__job-insight').text
+    insights = job_details.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__job-insight')
+    if len(insights) == 0:
+        raise RuntimeWarning(f"Browser has not loaded insights yet.")
+    full_time_or_other = insights[0].text
+    if "·" in full_time_or_other:
+        full_time_or_other, entry_level = full_time_or_other.split("·")[0].strip(), full_time_or_other.split("·")[
+            1].strip()
+    else:
+        entry_level = "Unspecified"
+
+    company_size = insights[1].text
+    if "·" in company_size:
+        company_size, company_type = company_size.split("·")[0].strip(), company_size.split("·")[1].strip()
+    else:
+        company_type = "Unspecified"
+
     job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
+
     location = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet').text
 
     job = JobPosting(
@@ -120,9 +137,12 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
         applicants,
         workplace_type,
         company_size,
+        company_type,
+        full_time_or_other,
         job_description,
         site_name,
-        location)
+        location,
+        entry_level)
     return job
 
 
@@ -177,6 +197,7 @@ def main() -> None:
                 except Exception as e:
                     print(str(e))
                     attempts -= 1
+                    time.sleep(4 - attempts)
 
         time.sleep(0.5)
         pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
