@@ -26,6 +26,8 @@ UNIT_VALUES = {
     'weeks': 60 * 24 * 60 * 7,
     'month': 60 * 24 * 60 * 7 * 30,
     'months': 60 * 24 * 60 * 7 * 30,
+    'years' : 60 * 24 * 60 * 7 * 30 * 12,
+    'year': 60 * 24 * 60 * 7 * 30 * 12,
 }
 
 
@@ -208,5 +210,7 @@ if __name__ == "__main__":
     br = get_browser()
     try:
         main(br)
+    except RuntimeError:
+        print(f"Crashed at page: {br.current_url}")
     finally:
         br.close()

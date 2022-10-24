@@ -43,6 +43,9 @@ class JobPosting:
     def __str__(self):
         return f"{self.title} - {self.job_id}"
 
+    def __lt__(self, other):
+        return self.posted_date < other.posted_date
+
     @property
     def language_posted(self):
         if self.__language_posted is None and self.description != '':

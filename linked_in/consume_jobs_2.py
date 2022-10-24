@@ -57,27 +57,35 @@ def main():
     }
     max_applicatns = 5
     jobs = get_saved_jobs()
+
     jobs.sort()
+
+    jobs = [j for j in jobs if j.company_name != "Canonical"]
 
     # Keep only wanted languages on 'jobs' list.
     # WARNING: list mutability
-    wanted_languages = 'en,nl,es'.split(",")
+    wanted_languages = 'en,es'.split(",")
     lang_removed_jobs = keep_languages(jobs, wanted_languages)
 
-    for job in jobs:
-        assert isinstance(job, JobPosting)
-        for word, matches in jobs_description_contain.items():
-            if word in job.description.upper() and job.applicants <= max_applicatns and not requires_phd(
-                    job.description.upper()):
-                matches.append(job)
+    #remove graduates
+    prevlen = len(jobs)
+    for black_word in "GRADUATE,AT LEAST A MSC,UNIVERSITY DEGREE,DEGREE".split(','):
+        graduate_jobs = [j for j in jobs if not ('EQUIVALENT EXPERIENCE' not in j.description.upper() and black_word not in j.description.upper())]
+        jobs = [j for j in jobs if 'EQUIVALENT EXPERIENCE' not in j.description.upper() and black_word not in j.description.upper()]
+    print(f"Dropped {len(jobs) - prevlen} jobs due to graduateness")
 
-    jobs_description_contain_pre = deepcopy(jobs_description_contain)
+    remote_only = [job for job in jobs if job.workplace_type in ("Hy5brid","Remote")]
 
-    print(1)
-    # for k,v in jobs_contain.items():
-    #     for _ in v:
-    #         print(_.posted_date)
+    python_contains = [job for job in remote_only if 'Python'.upper() in job.description.upper()]
+    autom_cotains = [job for job in remote_only if 'automation'.upper() in job.description.upper() and job not in python_contains]
 
+    entry_level_python = [job for job in python_contains if job.entry_level == 'Entry level']
+    antientry_level_python = [job for job in python_contains if job.entry_level != 'Entry level']
+
+    entry_level_autom = [job for job in autom_cotains if job.entry_level == 'Entry level']
+    antientry_level_autom = [job for job in autom_cotains if job.entry_level != 'Entry level']
+
+    print(2)
 
 if __name__ == "__main__":
     main()
