@@ -3,6 +3,7 @@ import datetime
 from common.common import create_destination_folders
 from linked_in.site_info import WEBSITE_ALIAS as LINKED_IN_WEBSITE_ALIAS
 from langdetect import detect
+from os.path import isfile
 
 
 class JobPosting:
@@ -44,10 +45,10 @@ class JobPosting:
 
     @property
     def language_posted(self):
-        if self.__language_posted is None:
+        if self.__language_posted is None and self.description != '':
             self.__language_posted = detect(self.description)
             print(f"Language: {self.__language_posted} -- Now saving {self.job_id}.")
-            self.save(verbose=False)
+            self.save(verbose=False, overwrite=True)
         return self.__language_posted
 
     @property
@@ -60,7 +61,10 @@ class JobPosting:
     def __save_to_path(self) -> str:
         return f'../jobs/{self.site_name}/{self.job_id}'
 
-    def save(self, verbose=True) -> None:
+    def save(self, verbose=True, overwrite=False) -> None:
+        if not overwrite and isfile(self.__save_to_path):
+            print(f"Not saving {self.job_id} as it already exists.")
+            return
         if verbose:
             print(f"saving {self}")
         try:
