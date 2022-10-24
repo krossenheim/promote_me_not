@@ -2,11 +2,12 @@ import pickle
 import datetime
 from common.common import create_destination_folders
 from linked_in.site_info import WEBSITE_ALIAS as LINKED_IN_WEBSITE_ALIAS
+from langdetect import detect
 
 
 class JobPosting:
-    def __init__(self, job_id, title, posted_date, company_name, applicants, workplace_type, company_size,
-                 job_description, site_name, location):
+    def __init__(self, job_id, title, posted_date, company_name, applicants, workplace_type, company_size, company_type,
+                 full_time_or_other, job_description, site_name, location, entry_level):
         self.job_id = job_id
         self.retrieval_date = datetime.datetime.now()
 
@@ -17,14 +18,25 @@ class JobPosting:
         self.applicants = applicants
         self.workplace_type = workplace_type
         self.company_size = company_size
+        self.company_type = company_type
+        self.full_time_or_other = full_time_or_other
         self.description = job_description
         self.location = location
         assert isinstance(site_name, str)
         self.site_name = site_name
+        self.entry_level = entry_level
         # Consider assigning the job posting's language here instead of checking it elsewhere
+        self.__language_posted = None
 
     def __str__(self):
         return f"{self.title} - {self.job_id}"
+
+    @property
+    def language_posted(self):
+        if self.__language_posted is None:
+            self.__language_posted = detect(self.description)
+            self.save()
+        return self.__language_posted
 
     @property
     def url(self):
