@@ -1,5 +1,4 @@
 from django.db import models
-import datetime
 from django.utils import timezone
 from softdelete.models import SoftDeleteObject
 
@@ -24,8 +23,8 @@ class JobPosting(SoftDeleteObject, models.Model):
     language_of_description = models.CharField(max_length=2, null=True)
 
     def update(self, other):
-        print(f"Updating {self}")
         if other.applicants != self.applicants:
+            print(f"{self} has received {other.applicants-self.applicants} new applicants, saving.")
             applicants_change = JobPostingApplicantChange(
                 offer_related=self,
                 previous_applicants=self.applicants,
