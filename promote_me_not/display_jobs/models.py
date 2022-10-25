@@ -43,6 +43,8 @@ class JobPosting(SoftDeleteObject, models.Model):
         if not self.first_seen:
             self.first_seen = timezone.now()
             self.retrieval_date = timezone.now()
+        else:
+            print(f"Found new entry: {self}")
 
         super(JobPosting, self).save(*args, **kwargs)
 
