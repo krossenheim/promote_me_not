@@ -1,10 +1,13 @@
 from django.db import models
 import datetime
+from django.utils import timezone
+
 
 # Create your models here.
 class JobPosting(models.Model):
     job_id = models.IntegerField(null=True, blank=True, unique=True)
     retrieval_date = models.DateTimeField(null=True, blank=True)
+    first_seen = models.DateTimeField(null=True, blank=True)
     posted_date = models.DateTimeField(null=True, blank=True)
     applicants = models.IntegerField(null=True, blank=True)
     title = models.TextField(null=True, blank=True)
@@ -19,12 +22,18 @@ class JobPosting(models.Model):
     entry_level = models.TextField(null=True, blank=True)
     language_of_description = models.CharField(max_length=2, null=True, blank=True)
 
-
-    def update(self,other):
+    def update(self, other):
         print(f"Updating {self}")
         self.retrieval_date = datetime.datetime.now()
         self.applicants = other.applicants
         self.save()
+
+    def save(self, *args, **kwargs):
+        if not self.first_seen:
+            self.first_seen = timezone.now()
+            self.retrieval_date = timezone.now()
+
+        super(JobPosting, self).save(*args, **kwargs)
 
     def __repr__(self):
         return f"{self.title} - {self.job_id}"

@@ -139,7 +139,6 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
     job = JobPosting(
         job_id=job_id,
         title=title,
-        retrieval_date = datetime.datetime.now(),
         posted_date=posted_date,
         company_name=company_name,
         applicants=applicants,
@@ -202,7 +201,7 @@ def main(br) -> None:
                         job = get_job_posting(job_id, WEBSITE_ALIAS, details)
                         may_exist = JobPosting.objects.filter(job_id=job_id)
                         if not may_exist:
-                            job.update()
+                            job.save()
                         else:
                             may_exist[0].update(job)
                         break
