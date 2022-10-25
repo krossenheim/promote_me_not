@@ -13,14 +13,13 @@ import datetime
 import re
 import os
 import sys
-import pathlib
-
 from django import setup
 
 sys.path.append(r"C:\Users\jantequera\PycharmProjects\lkscrape\promote_me_not")
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'promote_me_not.settings')
 setup()
 from display_jobs.models import JobPosting
+from django.utils import timezone
 
 UNIT_VALUES = {
     'seconds': 1,
@@ -82,6 +81,11 @@ def lk_login(br: Chrome, u='jleonardola@gmail.com', p=PASSWORD) -> bool:
     return True
 
 
+class LinkedInInsightsNotLoaded(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
 def next_page(pagination_box: WebElement) -> bool:
     buttons = pagination_box.find_elements(By.XPATH, "*")
     selected_button = pagination_box.find_element(By.CLASS_NAME, 'selected')
@@ -102,7 +106,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
 
     magnitude, unit, _ = posted_date.split(" ")
     unit_seconds = UNIT_VALUES[unit]
-    posted_date = datetime.datetime.now() - datetime.timedelta(seconds=unit_seconds * int(magnitude))
+    posted_date = timezone.now() - datetime.timedelta(seconds=unit_seconds * int(magnitude))
 
     company_name = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text
     try:
@@ -118,7 +122,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
         workplace_type = "Unspecified"
     insights = job_details.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__job-insight')
     if len(insights) == 0:
-        raise RuntimeWarning(f"Browser has not loaded insights yet.")
+        raise LinkedInInsightsNotLoaded(f"Browser has not loaded insights yet.")
     full_time_or_other = insights[0].text
     if "·" in full_time_or_other:
         full_time_or_other, entry_level = full_time_or_other.split("·")[0].strip(), full_time_or_other.split("·")[
@@ -191,11 +195,11 @@ def main(br) -> None:
                     raise RuntimeError("Mistakes were made.")
 
                 attempts = 4
+                # If we're trying to acquire elements that have not loaded yet, we increase this
+                insights_time_offset = 0
                 while True:
-                    time.sleep(0.5)
+                    time.sleep(0.1 + insights_time_offset)
                     details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
-                    if not attempts:
-                        raise RuntimeError("Mistakes were made 2.")
                     try:
                         job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
                         job = get_job_posting(job_id, WEBSITE_ALIAS, details)
@@ -205,8 +209,12 @@ def main(br) -> None:
                         else:
                             may_exist[0].update(job)
                         break
+                    except LinkedInInsightsNotLoaded:
+                        print("Insights not loaded, retrying.")
+                        insights_time_offset += 0.05
+                        time.sleep(0.1)
                     except Exception as e:
-                        print(str(e))
+                        print(f"Mishandled exception, continuing to next post, exception was: {str(e)}")
                         attempts -= 1
                         time.sleep(4 - attempts)
 
