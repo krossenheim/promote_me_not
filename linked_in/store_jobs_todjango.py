@@ -3,7 +3,7 @@ from typing import Any
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import JavascriptException, NoSuchElementException
+from selenium.common.exceptions import JavascriptException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser
 from common.secret import PASSWORD
@@ -213,6 +213,9 @@ def main(br) -> None:
                         print("Insights not loaded, retrying.")
                         insights_time_offset += 0.05
                         time.sleep(0.1)
+                    except StaleElementReferenceException:
+                        print("Stale element exception, retrying.")
+                        time.sleep(2)
                     except Exception as e:
                         print(f"Mishandled exception, continuing to next post, exception was: {str(e)}")
                         attempts -= 1
