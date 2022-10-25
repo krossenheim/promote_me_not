@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from softdelete.models import SoftDeleteObject
+from langdetect import detect
 
 
 # Create your models here.
@@ -20,11 +21,17 @@ class JobPosting(SoftDeleteObject, models.Model):
     location = models.CharField(max_length=255, null=True)
     site_scraped_from = models.CharField(max_length=255, null=True)
     entry_level = models.CharField(max_length=255, null=True)
-    language_of_description = models.CharField(max_length=2, null=True)
+    language_detected = models.CharField(max_length=2, null=True)
+
+    @property
+    def language_posted(self):
+        if not self.language_detected:
+            self.language_detected = detect(self.description)
+        return self.language_detected
 
     def update(self, other):
         if other.applicants != self.applicants:
-            print(f"{self} has received {other.applicants-self.applicants} new applicants, saving.")
+            print(f"{self} has received {other.applicants - self.applicants} new applicants, saving.")
             applicants_change = JobPostingApplicantChange(
                 offer_related=self,
                 previous_applicants=self.applicants,
