@@ -109,12 +109,6 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
     posted_date = timezone.now() - datetime.timedelta(seconds=unit_seconds * int(magnitude))
 
     company_name = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text
-    try:
-        applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count').text
-        applicants = int(applicants.split(" ")[0])
-
-    except NoSuchElementException:
-        applicants = 0
 
     try:
         workplace_type = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type').text
@@ -135,6 +129,15 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
         company_size, company_type = company_size.split("·")[0].strip(), company_size.split("·")[1].strip()
     else:
         company_type = "Unspecified"
+
+    for i in range(0, 3):
+        try:
+            applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count').text
+            applicants = int(applicants.split(" ")[0])
+            break
+        except NoSuchElementException:
+            time.sleep(0.1)
+            applicants = 0
 
     job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
 
@@ -175,12 +178,7 @@ def main(br) -> None:
                 if 'Refine by title' in item.text:
                     continue
                 # Clicking the middle of the element sometimes hits a link instead, this avoids that.
-
-                try:
-                    br.execute_script(
-                        f"document.getElementsByClassName('job-card-list__title')[{n - 1}].scrollIntoView(true)")
-                except JavascriptException:
-                    print(f"JavascriptException when scrolling element into view: IGNORED")
+                zoom_to_elements_by_class_name('job-card-list__title', n - 1)
 
                 attempts = 5
                 while attempts:
@@ -216,18 +214,38 @@ def main(br) -> None:
                     except StaleElementReferenceException:
                         print("Stale element exception, retrying.")
                         time.sleep(2)
+                    except NoSuchElementException:
+                        if 'No longer accepting applications' in details.text:
+                            print("Skipping, job offer is closed")
+                            # TODO: Expand the model to flag closed job positions
+                            break
                     except Exception as e:
                         print(f"Mishandled exception, continuing to next post, exception was: {str(e)}")
                         attempts -= 1
                         time.sleep(4 - attempts)
 
             time.sleep(0.5)
+
+            if not zoom_to_elements_by_class_name('artdeco-pagination__pages', 0):
+                print(f"JavascriptException when scrolling element into view: This page has no more entries")
+                print("Reached last page on this search")
+                break
+
             pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
             if not next_page(pagination_box):
-                print("Reached last page on LinkedIn")
-                return
+                print("Reached last page on this search")
+                break
             time.sleep(2)
         #     press_next = True
+
+
+def zoom_to_elements_by_class_name(class_name, index):
+    try:
+        br.execute_script(
+            f"document.getElementsByClassName('{class_name}')[{index}].scrollIntoView(true)")
+        return True
+    except JavascriptException:
+        return False
 
 
 if __name__ == "__main__":

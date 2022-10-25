@@ -7,11 +7,12 @@ HOME = 'https://www.linkedin.com'
 WEBSITE_ALIAS = "linked_in"
 
 geo_ids = {
+    'denmark': '104514075',
+    'norway': '103819153',
+    'spain': '105646813',
     'netherlands': '102890719',
     'sweden': '105117694',
-    'norway': '103819153',
-    'denmark': '104514075',
-    'spain': '105646813',
+
 
 }
 search_terms = "django,python,software,developer,automation,testing,game,api,flask".split(',')
