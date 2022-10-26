@@ -173,17 +173,15 @@ def main(br) -> None:
         time.sleep(2)
 
         while True:
-            for i in range(0, 10):
-                if zoom_to_elements_by_class_name(br, 'scaffold-layout__list-container', 0):
-                    break
-                elif i == 9:
-                    raise RuntimeError(f"Element by class name 'scaffold-layout__list-container' cannot be found.")
+            zoom_to_elements_by_class_name(br, 'scaffold-layout__list-container', 0)
 
-            container = br.find_elements(By.CLASS_NAME, 'scaffold-layout__list-container')
-            if not container:
-                break
-            else:
-                container = container[0]
+            try:
+                container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
+            except NoSuchElementException:
+                if 'No matching jobs found' in br.page_source:
+                    break
+                raise RuntimeError("Unexpected website state.")
+
             visible_cards = container.find_elements(By.XPATH, "*")
             for n, item in enumerate(visible_cards):
                 if 'Refine by title' in item.text:
@@ -262,8 +260,8 @@ if __name__ == "__main__":
     browser = get_browser()
     try:
         main(browser)
-    except:
-        print(f"Crashed at page: {browser.current_url}")
+    except Exception as e:
+        print(f"Crashed at page: {browser.current_url}\n{str(e)}")
     finally:
         print(f"Closed at: {browser.current_url}")
         browser.close()
