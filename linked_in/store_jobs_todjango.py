@@ -1,10 +1,9 @@
 import time
 from typing import Any
-from common.jobposting import JobPosting
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import JavascriptException, NoSuchElementException
+from selenium.common.exceptions import JavascriptException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser
 from common.secret import PASSWORD
@@ -12,6 +11,15 @@ from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS
 from cookies_store import cookies_get, cookies_load
 import datetime
 import re
+import os
+import sys
+from django import setup
+
+sys.path.append(r"C:\Users\jantequera\PycharmProjects\lkscrape\promote_me_not")
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'promote_me_not.settings')
+setup()
+from display_jobs.models import JobPosting
+from django.utils import timezone
 
 UNIT_VALUES = {
     'seconds': 1,
@@ -26,7 +34,7 @@ UNIT_VALUES = {
     'weeks': 60 * 24 * 60 * 7,
     'month': 60 * 24 * 60 * 7 * 30,
     'months': 60 * 24 * 60 * 7 * 30,
-    'years' : 60 * 24 * 60 * 7 * 30 * 12,
+    'years': 60 * 24 * 60 * 7 * 30 * 12,
     'year': 60 * 24 * 60 * 7 * 30 * 12,
 }
 
@@ -73,6 +81,11 @@ def lk_login(br: Chrome, u='jleonardola@gmail.com', p=PASSWORD) -> bool:
     return True
 
 
+class LinkedInInsightsNotLoaded(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
 def next_page(pagination_box: WebElement) -> bool:
     buttons = pagination_box.find_elements(By.XPATH, "*")
     selected_button = pagination_box.find_element(By.CLASS_NAME, 'selected')
@@ -93,15 +106,9 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
 
     magnitude, unit, _ = posted_date.split(" ")
     unit_seconds = UNIT_VALUES[unit]
-    posted_date = datetime.datetime.now() - datetime.timedelta(seconds=unit_seconds * int(magnitude))
+    posted_date = timezone.now() - datetime.timedelta(seconds=unit_seconds * int(magnitude))
 
     company_name = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text
-    try:
-        applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count').text
-        applicants = int(applicants.split(" ")[0])
-
-    except NoSuchElementException:
-        applicants = 0
 
     try:
         workplace_type = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type').text
@@ -109,7 +116,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
         workplace_type = "Unspecified"
     insights = job_details.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__job-insight')
     if len(insights) == 0:
-        raise RuntimeWarning(f"Browser has not loaded insights yet.")
+        raise LinkedInInsightsNotLoaded(f"Browser has not loaded insights yet.")
     full_time_or_other = insights[0].text
     if "·" in full_time_or_other:
         full_time_or_other, entry_level = full_time_or_other.split("·")[0].strip(), full_time_or_other.split("·")[
@@ -123,24 +130,32 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
     else:
         company_type = "Unspecified"
 
-    job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
+    applicants = 0
+    for i in range(0, 3):
+        try:
+            applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count').text
+            applicants = int(applicants.split(" ")[0])
+            break
+        except NoSuchElementException:
+            time.sleep(0.1)
 
+    job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
     location = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet').text
 
     job = JobPosting(
-        job_id,
-        title,
-        posted_date,
-        company_name,
-        applicants,
-        workplace_type,
-        company_size,
-        company_type,
-        full_time_or_other,
-        job_description,
-        site_name,
-        location,
-        entry_level)
+        job_id=job_id,
+        title=title,
+        posted_date=posted_date,
+        company_name=company_name,
+        applicants=applicants,
+        workplace_type=workplace_type,
+        company_size=company_size,
+        company_type=company_type,
+        full_time_or_other=full_time_or_other,
+        description=job_description,
+        site_scraped_from=site_name,
+        location=location,
+        entry_level=entry_level)
     return job
 
 
@@ -149,6 +164,8 @@ def main(br) -> None:
     br.get(LOGIN)
     cookies_load(br)
     br.get(LOGIN)
+    # If we're trying to acquire elements that have not loaded yet, we increase this
+    insights_time_offset = 0
     if not is_logged_in(br):
         lk_login(br)
     for link in SEARCH_LINKS:
@@ -156,18 +173,23 @@ def main(br) -> None:
         time.sleep(2)
 
         while True:
-            container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
+            for i in range(0, 10):
+                if zoom_to_elements_by_class_name(br, 'scaffold-layout__list-container', 0):
+                    break
+                elif i == 9:
+                    raise RuntimeError(f"Element by class name 'scaffold-layout__list-container' cannot be found.")
+
+            container = br.find_elements(By.CLASS_NAME, 'scaffold-layout__list-container')
+            if not container:
+                break
+            else:
+                container = container[0]
             visible_cards = container.find_elements(By.XPATH, "*")
             for n, item in enumerate(visible_cards):
                 if 'Refine by title' in item.text:
                     continue
                 # Clicking the middle of the element sometimes hits a link instead, this avoids that.
-
-                try:
-                    br.execute_script(
-                        f"document.getElementsByClassName('job-card-list__title')[{n - 1}].scrollIntoView(true)")
-                except JavascriptException:
-                    print(f"JavascriptException when scrolling element into view: IGNORED")
+                zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
 
                 attempts = 5
                 while attempts:
@@ -182,35 +204,66 @@ def main(br) -> None:
                     raise RuntimeError("Mistakes were made.")
 
                 attempts = 4
+
                 while True:
-                    time.sleep(0.5)
+                    time.sleep(0.1 + insights_time_offset)
                     details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
-                    if not attempts:
-                        raise RuntimeError("Mistakes were made 2.")
                     try:
                         job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
                         job = get_job_posting(job_id, WEBSITE_ALIAS, details)
-                        job.save()
+                        may_exist = JobPosting.objects.filter(job_id=job_id)
+                        if not may_exist:
+                            job.save()
+                        else:
+                            may_exist[0].update(job)
                         break
+                    except LinkedInInsightsNotLoaded:
+                        print("Insights not loaded, retrying.")
+                        insights_time_offset += 0.05
+                        time.sleep(0.1)
+                    except StaleElementReferenceException:
+                        print("Stale element exception, retrying.")
+                        time.sleep(2)
+                    except NoSuchElementException:
+                        if 'No longer accepting applications' in details.text:
+                            print("Skipping, job offer is closed")
+                            # TODO: Expand the model to flag closed job positions
+                            break
                     except Exception as e:
-                        print(str(e))
+                        print(f"Mishandled exception, continuing to next post, exception was: {str(e)}")
                         attempts -= 1
                         time.sleep(4 - attempts)
 
             time.sleep(0.5)
+
+            if not zoom_to_elements_by_class_name(br, 'artdeco-pagination__pages', 0):
+                print(f"JavascriptException when scrolling element into view-> Assuming this page has no more entries")
+                print("Reached last page on this search")
+                break
+
             pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
             if not next_page(pagination_box):
-                print("Reached last page on LinkedIn")
-                return
+                print("Reached last page on this search")
+                break
             time.sleep(2)
         #     press_next = True
 
 
-if __name__ == "__main__":
-    br = get_browser()
+def zoom_to_elements_by_class_name(br, class_name, index):
     try:
-        main(br)
-    except RuntimeError:
-        print(f"Crashed at page: {br.current_url}")
+        br.execute_script(
+            f"document.getElementsByClassName('{class_name}')[{index}].scrollIntoView(true)")
+        return True
+    except JavascriptException:
+        return False
+
+
+if __name__ == "__main__":
+    browser = get_browser()
+    try:
+        main(browser)
+    except:
+        print(f"Crashed at page: {browser.current_url}")
     finally:
-        br.close()
+        print(f"Closed at: {browser.current_url}")
+        browser.close()
