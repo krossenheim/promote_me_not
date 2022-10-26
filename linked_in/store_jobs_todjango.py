@@ -179,7 +179,11 @@ def main(br) -> None:
                 elif i == 9:
                     raise RuntimeError(f"Element by class name 'scaffold-layout__list-container' cannot be found.")
 
-            container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
+            container = br.find_elements(By.CLASS_NAME, 'scaffold-layout__list-container')
+            if not container:
+                break
+            else:
+                container = container[0]
             visible_cards = container.find_elements(By.XPATH, "*")
             for n, item in enumerate(visible_cards):
                 if 'Refine by title' in item.text:
@@ -258,7 +262,7 @@ if __name__ == "__main__":
     browser = get_browser()
     try:
         main(browser)
-    except RuntimeError:
+    except:
         print(f"Crashed at page: {browser.current_url}")
     finally:
         print(f"Closed at: {browser.current_url}")

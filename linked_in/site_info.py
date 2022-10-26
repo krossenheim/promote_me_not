@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 LOGIN = 'https://www.linkedin.com/login'
-JOBS = "https://www.linkedin.com/jobs/search/?geoId=91000000&keywords=django&start=0"
 HOME = 'https://www.linkedin.com'
 WEBSITE_ALIAS = "linked_in"
 
@@ -16,7 +15,7 @@ geo_ids = {
 
 
 }
-search_terms = "django,python,software,developer,automation,testing,game,api,flask".split(',')
+search_terms = "software,developer,automation,testing,game,api,flask,django,python".split(',')
 bases = (
     'https://www.linkedin.com/jobs/search/?currentJobId=3328383281&f_E=2&geoId=__GEOID__&keywords=',
     'https://www.linkedin.com/jobs/search/?currentJobId=3328383281&geoId=__GEOID__&keywords='
