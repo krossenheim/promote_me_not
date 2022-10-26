@@ -170,15 +170,20 @@ def main(br) -> None:
         lk_login(br)
     for link in SEARCH_LINKS:
         br.get(link)
-        time.sleep(2)
 
         while True:
-            zoom_to_elements_by_class_name(br, 'scaffold-layout__list-container', 0)
-
+            while True:
+                try:
+                    br.find_element(By.CLASS_NAME, 'jobs-apply-button--top-card').find_element(By.CLASS_NAME,
+                                                                                               'artdeco-button--primary')
+                    break
+                except (NoSuchElementException, StaleElementReferenceException):
+                    pass
             try:
                 container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
             except NoSuchElementException:
                 if 'No matching jobs found' in br.page_source:
+                    print(f"No jobs found, reached the end of the search results. Next link.")
                     break
                 raise RuntimeError("Unexpected website state.")
 
@@ -204,7 +209,6 @@ def main(br) -> None:
                 attempts = 4
 
                 while True:
-                    time.sleep(0.1 + insights_time_offset)
                     details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
                     try:
                         job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
@@ -217,11 +221,8 @@ def main(br) -> None:
                         break
                     except LinkedInInsightsNotLoaded:
                         print("Insights not loaded, retrying.")
-                        insights_time_offset += 0.05
-                        time.sleep(0.1)
                     except StaleElementReferenceException:
                         print("Stale element exception, retrying.")
-                        time.sleep(2)
                     except NoSuchElementException:
                         if 'No longer accepting applications' in details.text:
                             print("Skipping, job offer is closed")
@@ -231,8 +232,6 @@ def main(br) -> None:
                         print(f"Mishandled exception, continuing to next post, exception was: {str(e)}")
                         attempts -= 1
                         time.sleep(4 - attempts)
-
-            time.sleep(0.5)
 
             if not zoom_to_elements_by_class_name(br, 'artdeco-pagination__pages', 0):
                 print(f"JavascriptException when scrolling element into view-> Assuming this page has no more entries")
