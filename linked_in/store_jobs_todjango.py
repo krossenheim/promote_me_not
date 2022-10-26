@@ -130,6 +130,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
     else:
         company_type = "Unspecified"
 
+    applicants = 0
     for i in range(0, 3):
         try:
             applicants = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__applicant-count').text
@@ -137,10 +138,8 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
             break
         except NoSuchElementException:
             time.sleep(0.1)
-            applicants = 0
 
     job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
-
     location = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet').text
 
     job = JobPosting(
@@ -165,6 +164,8 @@ def main(br) -> None:
     br.get(LOGIN)
     cookies_load(br)
     br.get(LOGIN)
+    # If we're trying to acquire elements that have not loaded yet, we increase this
+    insights_time_offset = 0
     if not is_logged_in(br):
         lk_login(br)
     for link in SEARCH_LINKS:
@@ -172,6 +173,12 @@ def main(br) -> None:
         time.sleep(2)
 
         while True:
+            for i in range(0, 10):
+                if zoom_to_elements_by_class_name(br, 'scaffold-layout__list-container', 0):
+                    break
+                elif i == 9:
+                    raise RuntimeError(f"Element by class name 'scaffold-layout__list-container' cannot be found.")
+
             container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
             visible_cards = container.find_elements(By.XPATH, "*")
             for n, item in enumerate(visible_cards):
@@ -193,8 +200,7 @@ def main(br) -> None:
                     raise RuntimeError("Mistakes were made.")
 
                 attempts = 4
-                # If we're trying to acquire elements that have not loaded yet, we increase this
-                insights_time_offset = 0
+
                 while True:
                     time.sleep(0.1 + insights_time_offset)
                     details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
