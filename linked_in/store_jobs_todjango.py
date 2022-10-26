@@ -178,7 +178,7 @@ def main(br) -> None:
                 if 'Refine by title' in item.text:
                     continue
                 # Clicking the middle of the element sometimes hits a link instead, this avoids that.
-                zoom_to_elements_by_class_name('job-card-list__title', n - 1)
+                zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
 
                 attempts = 5
                 while attempts:
@@ -226,8 +226,8 @@ def main(br) -> None:
 
             time.sleep(0.5)
 
-            if not zoom_to_elements_by_class_name('artdeco-pagination__pages', 0):
-                print(f"JavascriptException when scrolling element into view: This page has no more entries")
+            if not zoom_to_elements_by_class_name(br, 'artdeco-pagination__pages', 0):
+                print(f"JavascriptException when scrolling element into view-> Assuming this page has no more entries")
                 print("Reached last page on this search")
                 break
 
@@ -239,7 +239,7 @@ def main(br) -> None:
         #     press_next = True
 
 
-def zoom_to_elements_by_class_name(class_name, index):
+def zoom_to_elements_by_class_name(br, class_name, index):
     try:
         br.execute_script(
             f"document.getElementsByClassName('{class_name}')[{index}].scrollIntoView(true)")
@@ -249,10 +249,11 @@ def zoom_to_elements_by_class_name(class_name, index):
 
 
 if __name__ == "__main__":
-    br = get_browser()
+    browser = get_browser()
     try:
-        main(br)
+        main(browser)
     except RuntimeError:
-        print(f"Crashed at page: {br.current_url}")
+        print(f"Crashed at page: {browser.current_url}")
     finally:
-        br.close()
+        print(f"Closed at: {browser.current_url}")
+        browser.close()

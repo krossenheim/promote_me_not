@@ -7,6 +7,7 @@ HOME = 'https://www.linkedin.com'
 WEBSITE_ALIAS = "linked_in"
 
 geo_ids = {
+    'finland' : '100456013',
     'denmark': '104514075',
     'norway': '103819153',
     'spain': '105646813',

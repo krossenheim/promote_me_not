@@ -26,7 +26,8 @@ class JobPosting(SoftDeleteObject, models.Model):
     @property
     def language_posted(self):
         if not self.language_detected:
-            self.language_detected = detect(self.description)
+            self.language_detected = detect(self.description) if self.description else '00'
+            self.save()
         return self.language_detected
 
     def update(self, other):
@@ -48,10 +49,9 @@ class JobPosting(SoftDeleteObject, models.Model):
 
     def save(self, *args, **kwargs):
         if not self.first_seen:
+            print(f"Found new entry: {self}")
             self.first_seen = timezone.now()
             self.retrieval_date = timezone.now()
-        else:
-            print(f"Found new entry: {self}")
 
         super(JobPosting, self).save(*args, **kwargs)
 
