@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-LOGIN = 'https://www.linkedin.com/login'
+LOGIN = 'https://www.linkedin.com/login/'
 HOME = 'https://www.linkedin.com'
 WEBSITE_ALIAS = "linked_in"
 
