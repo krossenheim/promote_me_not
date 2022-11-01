@@ -4,7 +4,7 @@ from pathlib import Path
 LOGIN = 'https://www.linkedin.com/login/'
 HOME = 'https://www.linkedin.com'
 WEBSITE_ALIAS = "linked_in"
-
+CONTAINER_CLASS_NAME = 'scaffold-layout__list-container'
 geo_ids = {
     'finland': '100456013',
     'denmark': '104514075',

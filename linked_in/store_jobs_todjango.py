@@ -7,12 +7,13 @@ from selenium.common.exceptions import JavascriptException, NoSuchElementExcepti
 from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser
 from common.secret import PASSWORD
-from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS
-from cookies_store import cookies_get, cookies_load
+from common.cookies_store import cookies_get, cookies_set as cookies_load
 import datetime
 import re
 import os
 import sys
+from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS# TODO: refactor these usages use
+import linked_in.site_info as site_info
 from django import setup
 
 sys.path.append(r"C:\Users\jantequera\PycharmProjects\lkscrape\promote_me_not")
@@ -179,7 +180,7 @@ def main(br) -> None:
                 except JavascriptException:
                     pass
             try:
-                container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
+                container = br.find_element(By.CLASS_NAME, site_info.CONTAINER_CLASS_NAME)
             except NoSuchElementException:
                 if 'No matching jobs found' in br.page_source:
                     print(f"No jobs found, reached the end of the search results. Next link.")
