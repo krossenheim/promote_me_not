@@ -137,7 +137,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
             applicants = int(applicants.split(" ")[0])
             break
         except NoSuchElementException:
-            time.sleep(0.1)
+            time.sleep(0.025)
 
     job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
     location = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet').text
@@ -174,10 +174,9 @@ def main(br) -> None:
         while True:
             while True:
                 try:
-                    br.find_element(By.CLASS_NAME, 'jobs-apply-button--top-card').find_element(By.CLASS_NAME,
-                                                                                               'artdeco-button--primary')
+                    br.execute_script("document.getElementsByClassName('jobs-apply-button--top-card')[0].getElementsByClassName('artdeco-button--primary')[0]")
                     break
-                except (NoSuchElementException, StaleElementReferenceException):
+                except JavascriptException:
                     pass
             try:
                 container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
