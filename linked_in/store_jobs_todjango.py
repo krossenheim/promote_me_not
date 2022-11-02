@@ -193,7 +193,15 @@ def main(br) -> None:
 
             visible_cards = container.find_elements(By.XPATH, "*")
             for n, item in enumerate(visible_cards):
+                zoomed_to_card = False
                 card_text = item.text
+                while card_text == "":
+                    card_text = item.text
+                    if not zoomed_to_card:
+                        zoomed_to_card = True
+                        # Clicking the middle of the element sometimes hits a link instead, this avoids that.
+                        zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
+                    time.sleep(insights_time_offset)
                 if 'Refine by title' in card_text:
                     continue
                 card_text = "-".join(card_text.split("\n")[0:3])
@@ -202,19 +210,22 @@ def main(br) -> None:
                 else:
                     continue
 
-                # Clicking the middle of the element sometimes hits a link instead, this avoids that.
-                zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
+                # We need to be able to click on it, the text may have been seen before zooming to it.
+                if not zoomed_to_card:
+                    zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
 
                 attempts = 5
                 while attempts:
                     try:
                         item.find_element(By.CLASS_NAME, 'job-card-list__title').click()
                         break
-                    except Exception as e:
-                        print(f"Failed on item{item.text}. Retrying in {6 - attempts}")
+                    except (NoSuchElementException, StaleElementReferenceException):
+                        print(f"Failed on item{item.text} due to nosuch or stale element. Retrying in {6 - attempts}")
                         time.sleep(6 - attempts)
                         attempts -= 1
                 if not attempts:
+                    print(f"Failed to acquire element by class {'job-card-list__title'} {5} times. Reloading link")
+                    br.get(link)
                     raise RuntimeError("Mistakes were made.")
 
                 attempts = 4
