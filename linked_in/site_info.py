@@ -15,7 +15,7 @@ geo_ids = {
 
 
 }
-search_terms = "software,developer,automation,testing,game,api,flask,django,python".split(',')
+search_terms = "python,software,developer,automation,testing,game,api,flask,django".split(',')
 bases = (
     'https://www.linkedin.com/jobs/search/?currentJobId=3328383281&f_E=2&geoId=__GEOID__&keywords=',
     'https://www.linkedin.com/jobs/search/?currentJobId=3328383281&geoId=__GEOID__&keywords='

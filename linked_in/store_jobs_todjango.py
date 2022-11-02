@@ -161,11 +161,14 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
 
 
 def main(br) -> None:
-    br.set_window_size(1920, 2048)
     br.get(LOGIN)
     cookies_load(br)
     br.get(LOGIN)
-    # If we're trying to acquire elements that have not loaded yet, we increase this
+    # Used while looking at the element text before clicking on it, thus skipping already-seen-jobs.
+    seen_job_card_texts = [f"{item.title}-{item.company_name}-{item.location}" for item in JobPosting.objects.all()]
+
+    # If we're trying to acquire elements that have not loaded yet, we increase this.
+    # We time.sleep this number as well as set it as the browser implicit wait time
     insights_time_offset = 0
     if not is_logged_in(br):
         lk_login(br)
@@ -181,12 +184,24 @@ def main(br) -> None:
             except NoSuchElementException:
                 if 'No matching jobs found' in br.page_source:
                     break
+                if 'premium/products' in br.current_url:
+                    print("Premium products page encountered, reloadling currently search link and continuing."
+                          "(Suggestions on where to stuff premium ads not volunteered)")
+                    br.get(link)
+                    continue
                 raise RuntimeError("Unexpected website state.")
 
             visible_cards = container.find_elements(By.XPATH, "*")
             for n, item in enumerate(visible_cards):
-                if 'Refine by title' in item.text:
+                card_text = item.text
+                if 'Refine by title' in card_text:
                     continue
+                card_text = "-".join(card_text.split("\n")[0:3])
+                if card_text not in seen_job_card_texts:
+                    seen_job_card_texts.append(card_text)
+                else:
+                    continue
+
                 # Clicking the middle of the element sometimes hits a link instead, this avoids that.
                 zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
 
@@ -214,12 +229,13 @@ def main(br) -> None:
                         if not may_exist:
                             job.save()
                         else:
-                            may_exist[0].update(job)git sta
+                            may_exist[0].update(job)
                         break
                     except LinkedInInsightsNotLoaded:
                         print("Insights not loaded, retrying.")
-                        insights_time_offset += 0.05
-                        time.sleep(0.1)
+                        insights_time_offset += 0.025
+                        br.implicitly_wait(insights_time_offset)
+                        time.sleep(insights_time_offset)
                     except StaleElementReferenceException:
                         print("Stale element exception, retrying.")
                         time.sleep(2)
@@ -232,8 +248,6 @@ def main(br) -> None:
                         print(f"Mishandled exception, continuing to next post, exception was: {str(e)}")
                         attempts -= 1
                         time.sleep(4 - attempts)
-
-            time.sleep(0.5)
 
             if not zoom_to_elements_by_class_name(br, 'artdeco-pagination__pages', 0):
                 print(f"JavascriptException when scrolling element into view-> Assuming this page has no more entries")
@@ -259,6 +273,7 @@ def zoom_to_elements_by_class_name(br, class_name, index):
 
 if __name__ == "__main__":
     browser = get_browser()
+    browser.set_window_size(1920, 2048)
     try:
         main(browser)
     except Exception as e:
