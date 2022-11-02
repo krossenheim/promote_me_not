@@ -31,9 +31,10 @@ class JobPosting(SoftDeleteObject, models.Model):
         return self.language_detected
 
     def update(self, other):
-        assert self.title == other.title, "Job {self} has changed title, old title was {other.title} figure that out"
         print(f"{self} has received {other.applicants - self.applicants} new applicants, saving.")
         applicants_change = JobPostingApplicantChange(
+            previous_title=self.title,
+            current_title=other.title,
             offer_related=self,
             previous_applicants=self.applicants,
             previous_date=self.retrieval_date,
@@ -53,7 +54,7 @@ class JobPosting(SoftDeleteObject, models.Model):
 
     def save(self, *args, **kwargs):
         if not self.first_seen:
-            print(f"New entry: {self}")
+            print(f"New entry: {self}, posted {timezone.now() - self.posted_date} ago")
             self.first_seen = timezone.now()
             self.retrieval_date = timezone.now()
 
@@ -67,6 +68,8 @@ class JobPosting(SoftDeleteObject, models.Model):
 
 
 class JobPostingApplicantChange(SoftDeleteObject, models.Model):
+    previous_title = models.CharField(max_length=255, blank=True)
+    current_title = models.CharField(max_length=255, blank=True)
     offer_related = models.ForeignKey(JobPosting, on_delete=models.DO_NOTHING)
     previous_applicants = models.IntegerField()
     previous_date = models.DateTimeField()

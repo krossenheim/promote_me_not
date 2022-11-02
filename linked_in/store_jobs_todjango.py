@@ -3,11 +3,13 @@ from typing import Any
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import JavascriptException, NoSuchElementException, StaleElementReferenceException
+from selenium.common.exceptions import JavascriptException, NoSuchElementException, StaleElementReferenceException, \
+    ElementClickInterceptedException
 from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser
 from common.secret import PASSWORD
-from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS
+from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS, JOB_TABS_CONTAINER_CLASSNAME, \
+    MINIMUM_TIME_PER_PAGE_SECONDS
 from cookies_store import cookies_get, cookies_load
 import datetime
 import re
@@ -96,8 +98,9 @@ def next_page(pagination_box: WebElement) -> bool:
             click_next = True
             continue
         if click_next:
-            item.click()
-            return True
+            while True:
+                item.click()
+                return True
     return False
 
 
@@ -170,6 +173,7 @@ def main(br) -> None:
     # If we're trying to acquire elements that have not loaded yet, we increase this.
     # We time.sleep this number as well as set it as the browser implicit wait time
     insights_time_offset = 0
+    element_intercept_click_offset = 0.3
     if not is_logged_in(br):
         lk_login(br)
     for link in SEARCH_LINKS:
@@ -177,6 +181,7 @@ def main(br) -> None:
         time.sleep(2)
 
         while True:
+            start_time_on_page = datetime.datetime.now()
             zoom_to_elements_by_class_name(br, 'scaffold-layout__list-container', 0)
 
             try:
@@ -223,16 +228,20 @@ def main(br) -> None:
                         print(f"Failed on item{item.text} due to nosuch or stale element. Retrying in {6 - attempts}")
                         time.sleep(6 - attempts)
                         attempts -= 1
+                    except ElementClickInterceptedException:
+                        print("Other element would receive click exception, retrying.")
+                        time.sleep(element_intercept_click_offset)
+                        element_intercept_click_offset += 0.15
                 if not attempts:
                     print(f"Failed to acquire element by class {'job-card-list__title'} {5} times. Reloading link")
                     br.get(link)
                     raise RuntimeError("Mistakes were made.")
 
                 attempts = 4
-
                 while True:
-                    time.sleep(0.1 + insights_time_offset)
-                    details = br.find_element(By.CLASS_NAME, 'scaffold-layout__detail')
+                    time.sleep(insights_time_offset)
+                    details = br.find_element(By.CLASS_NAME, JOB_TABS_CONTAINER_CLASSNAME)
+
                     try:
                         job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
                         job = get_job_posting(job_id, WEBSITE_ALIAS, details)
@@ -245,7 +254,7 @@ def main(br) -> None:
                     except LinkedInInsightsNotLoaded:
                         print("Insights not loaded, retrying.")
                         insights_time_offset += 0.025
-                        br.implicitly_wait(insights_time_offset)
+                        br.implicitly_wait(0.5 + insights_time_offset)
                         time.sleep(insights_time_offset)
                     except StaleElementReferenceException:
                         print("Stale element exception, retrying.")
@@ -260,35 +269,65 @@ def main(br) -> None:
                         attempts -= 1
                         time.sleep(4 - attempts)
 
+            wait_for_insights_to_load(br)
+
+            while datetime.datetime.now() - start_time_on_page < datetime.timedelta(
+                    seconds=MINIMUM_TIME_PER_PAGE_SECONDS):
+                pass
+
             if not zoom_to_elements_by_class_name(br, 'artdeco-pagination__pages', 0):
-                print(f"JavascriptException when scrolling element into view-> Assuming this page has no more entries")
+                print(
+                    f"JavascriptException when scrolling element into view for {3} consecutive attempts.-> Assuming this page has no more entries")
                 print("Reached last page on this search")
                 break
 
             pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
+
             if not next_page(pagination_box):
                 print("Reached last page on this search")
                 break
-            time.sleep(2)
+            wait_for_insights_to_load(br)
         #     press_next = True
 
 
-def zoom_to_elements_by_class_name(br, class_name, index):
-    try:
-        br.execute_script(
-            f"document.getElementsByClassName('{class_name}')[{index}].scrollIntoView(true)")
-        return True
-    except JavascriptException:
-        return False
+def wait_for_insights_to_load(br: Chrome, max_attempts=10):
+    while True:
+        try:
+            # Before paginating, we ensure the currenet pge has finished loading.
+            # linkedin doesnt like it when you blaze through the paginator
+            if len(br.find_element(By.CLASS_NAME, JOB_TABS_CONTAINER_CLASSNAME).find_elements(By.CLASS_NAME,
+                                                                                              'jobs-unified-top-card__job-insight')) > 0:
+                break
+        except Exception as e:
+            time.sleep(0.5)
+            max_attempts -= 1
+            if not max_attempts:
+                raise e
+
+
+def zoom_to_elements_by_class_name(br, class_name, index, max_attempts=4):
+    rv = False
+    for i in range(0, max_attempts + 1):
+        try:
+            script = f"document.getElementsByClassName('{class_name}')[{index}].scrollIntoView(true)"
+            br.execute_script(script)
+            rv = True
+            break
+        except JavascriptException:
+            print(f"Couldn't zoom to {class_name}. Retrying.")
+            time.sleep(0.1)
+            continue
+    return rv
 
 
 if __name__ == "__main__":
     browser = get_browser()
+    browser.implicitly_wait(0.5)
     browser.set_window_size(1920, 2048)
     try:
         main(browser)
-    except Exception as e:
-        print(f"Crashed at page: {browser.current_url}\n{str(e)}")
+    # except Exception as e:
+    #     print(f"Crashed at page: {browser.current_url}\n{str(e)}")
     finally:
         print(f"Closed at: {browser.current_url}")
         browser.close()
