@@ -16,6 +16,7 @@ import sys
 from django import setup
 
 sys.path.append(r"C:\Users\jantequera\PycharmProjects\lkscrape\promote_me_not")
+sys.path.append(r"C:\Users\VKPC\PycharmProjects\scrapejobs\promote_me_not")
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'promote_me_not.settings')
 setup()
 from display_jobs.models import JobPosting
