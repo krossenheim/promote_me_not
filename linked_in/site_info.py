@@ -5,7 +5,7 @@ LOGIN = 'https://www.linkedin.com/login'
 HOME = 'https://www.linkedin.com'
 WEBSITE_ALIAS = "linked_in"
 JOB_TABS_CONTAINER_CLASSNAME = 'scaffold-layout__detail'
-MINIMUM_TIME_PER_PAGE_SECONDS = 1
+MINIMUM_TIME_PER_PAGE_SECONDS = 1.4
 
 geo_ids = {
     'finland' : '100456013',

@@ -77,3 +77,10 @@ class JobPostingApplicantChange(SoftDeleteObject, models.Model):
     current_date = models.DateTimeField()
     previous_location = models.CharField(max_length=255, blank=True)
     current_location = models.CharField(max_length=255, blank=True)
+
+
+class GeneratedUsername():
+    firstname = models.CharField(max_length=255, blank=True)
+    lastname = models.CharField(max_length=255, blank=True)
+    username = models.CharField(max_length=255, blank=True)
+    password = models.CharField(max_length=255, blank=True)

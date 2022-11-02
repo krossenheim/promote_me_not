@@ -7,7 +7,7 @@ from selenium.common.exceptions import JavascriptException, NoSuchElementExcepti
     ElementClickInterceptedException
 from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser
-from common.secret import PASSWORD
+from common.secret import PASSWORD, USERNAME
 from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS, JOB_TABS_CONTAINER_CLASSNAME, \
     MINIMUM_TIME_PER_PAGE_SECONDS
 from cookies_store import cookies_get, cookies_load
@@ -35,10 +35,10 @@ UNIT_VALUES = {
     'days': 60 * 24 * 60,
     'week': 60 * 24 * 60 * 7,
     'weeks': 60 * 24 * 60 * 7,
-    'month': 60 * 24 * 60 * 7 * 30,
-    'months': 60 * 24 * 60 * 7 * 30,
-    'years': 60 * 24 * 60 * 7 * 30 * 12,
-    'year': 60 * 24 * 60 * 7 * 30 * 12,
+    'month': 60 * 24 * 60 * 30,
+    'months': 60 * 24 * 60 * 30,
+    'years': 60 * 24 * 60 * 30 * 12,
+    'year': 60 * 24 * 60 * 30 * 12,
 }
 
 
@@ -67,7 +67,7 @@ def is_logged_in(br: Chrome, max_tries=4) -> bool:
             time.sleep(sleep_time)
 
 
-def lk_login(br: Chrome, u='jleonardola@gmail.com', p=PASSWORD) -> bool:
+def lk_login(br: Chrome, u=USERNAME, p=PASSWORD) -> bool:
     br.get(LOGIN)
     br.find_element(By.ID, 'username').send_keys(u)
     pbox = br.find_element(By.ID, 'password')
@@ -165,6 +165,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
 
 def main(br) -> None:
     br.get(LOGIN)
+    # https://www.linkedin.com/jobs/search/?currentJobId=3341349350&f_E=2&geoId=102890719&keywords=python&start=750git
     cookies_load(br)
     br.get(LOGIN)
     # Used while looking at the element text before clicking on it, thus skipping already-seen-jobs.
