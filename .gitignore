@@ -2,6 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*chromedriver.exe
+*log.html
+*report.html
+*output.xml
 .idea/
 cookies/
 jobs/

@@ -214,7 +214,7 @@ def main(br) -> None:
                         if not may_exist:
                             job.save()
                         else:
-                            may_exist[0].update(job)
+                            may_exist[0].update(job)git sta
                         break
                     except LinkedInInsightsNotLoaded:
                         print("Insights not loaded, retrying.")
