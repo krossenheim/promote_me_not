@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
+import pathlib
 from pathlib import Path
 from secret import DJANGO_KEY
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -37,11 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'softdelete',
     'display_jobs',
+    'softdelete',
     'django_tables2',
     'django_filters',
-    'bootstrap3'
+    'bootstrap5'
 ]
 
 MIDDLEWARE = [
@@ -59,12 +59,15 @@ ROOT_URLCONF = 'promote_me_not.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [f"{pathlib.Path(__file__).parent.resolve()}/display_jobs/templates/"],
         'OPTIONS': {
             'loaders': (
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
             ),
+            'builtins': [
+                'display_jobs.templatetags.job_posting_extras',
+            ],
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',

@@ -29,3 +29,11 @@ class JobPostingFilterView(SingleTableMixin, FilterView):
 # Create your views here.
 def main(request):
     return render(request, 'display_jobs/empty.html', {})
+
+def manual_jobposting_view(request):
+    jobs = JobPosting.objects.all()
+    context = {
+        'stub_table_job_postings' : jobs,
+    }
+
+    return render(request, 'display_jobs/job_posting_handmade.html', context)

@@ -1,3 +1,5 @@
+from typing import Any, Generator
+
 from django.db import models
 from django.utils import timezone
 from softdelete.models import SoftDeleteObject
@@ -23,6 +25,29 @@ class JobPosting(SoftDeleteObject, models.Model):
     site_scraped_from = models.CharField(max_length=255, null=True)
     entry_level = models.CharField(max_length=255, null=True)
     language_detected = models.CharField(max_length=2, null=True)
+
+    def __init__(self, *args, **kwargs):
+        self.wanted_attributes_for_ordered_table = "entry_level,title,location,first_seen,workplace_type,full_time_or_other,language_detected".split(
+            ",")
+        super().__init__(*args, **kwargs)
+
+    def __iter__(self):
+        for item in self.get_pretty_names_for_wanted_attributes_ordered_table:
+            yield item
+
+    @property
+    def get_pretty_names_for_wanted_attributes_ordered_table(self) -> list:
+        rv = list()
+        for item in self.wanted_attributes_for_ordered_table:
+            temp = item.split("_")
+            rv_append = " ".join([item.capitalize() for item in temp])
+            rv.append(rv_append)
+        return rv
+
+    @property
+    def get_attributes_ordered_for_table(self) -> list:
+        rv = [self.__getattribute__(item) for item in self.wanted_attributes_for_ordered_table]
+        return rv
 
     @property
     def language_posted(self):
