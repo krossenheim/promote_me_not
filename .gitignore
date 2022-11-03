@@ -7,8 +7,8 @@ __pycache__/
 *report.html
 *output.xml
 .idea/
-cookies/
-jobs/
+the_scrapering/cookies/
+the_scrapering/jobs/
 # C extensions
 *.so
 secret.py
