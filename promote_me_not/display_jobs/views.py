@@ -30,10 +30,12 @@ class JobPostingFilterView(SingleTableMixin, FilterView):
 def main(request):
     return render(request, 'display_jobs/empty.html', {})
 
+
 def manual_jobposting_view(request):
-    jobs = JobPosting.objects.all()
+    f = JobPostingFilter(request.GET, queryset=JobPosting.objects.all())
     context = {
-        'stub_table_job_postings' : jobs,
+        'column_names' : [name for name in JobPosting()],
+        'filter': f,
     }
 
     return render(request, 'display_jobs/job_posting_handmade.html', context)

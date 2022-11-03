@@ -36,6 +36,11 @@ class JobPosting(SoftDeleteObject, models.Model):
             yield item
 
     @property
+    def joburl(self):
+        return f"https://www.linkedin.com/jobs/view/{self.job_id}"
+
+
+    @property
     def get_pretty_names_for_wanted_attributes_ordered_table(self) -> list:
         rv = list()
         for item in self.wanted_attributes_for_ordered_table:

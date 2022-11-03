@@ -25,7 +25,7 @@ class JobPostingFilter(django_filters.FilterSet):
         widget=TextInput(attrs={'placeholder': 'Does not contain'})
     )
     description_contains_not3 = django_filters.CharFilter(
-        method='description_does_not_contain',
+        field_name='Not contains',
         widget=TextInput(attrs={'placeholder': 'Does not contain'})
     )
 
