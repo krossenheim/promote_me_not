@@ -16,9 +16,11 @@ import re
 import os
 import sys
 from django import setup
+import pathlib
 
-sys.path.append(r"C:\Users\jantequera\PycharmProjects\lkscrape\promote_me_not")
-sys.path.append(r"C:\Users\VKPC\PycharmProjects\scrapejobs\promote_me_not")
+project_root = pathlib.Path(__file__).parent.parent.resolve()
+sys.path.append(f"{project_root}/promote_me_not")
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'promote_me_not.settings')
 setup()
 from display_jobs.models import JobPosting
@@ -62,7 +64,7 @@ def is_logged_in(br: Chrome, max_tries=4) -> bool:
         except:
             if attempt == max_tries:
                 return False
-            sleep_time = min((5, max_tries + 0.5 - attempt))
+            sleep_time = 0.1
             print(f"Rechecking user is logged-in; in {sleep_time} seconds")
             time.sleep(sleep_time)
 
@@ -200,7 +202,20 @@ def main(br) -> None:
             visible_cards = container.find_elements(By.XPATH, "*")
             for n, item in enumerate(visible_cards):
                 zoomed_to_card = False
-                card_text = item.text
+                stale_item_text = False
+                for i in range(0, 2):
+                    try:
+                        card_text = item.text
+                        break
+                    except StaleElementReferenceException:
+                        zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
+                        print("Oh, the staleness.")
+                        time.sleep(0.5)
+                        if i == 1:
+                            stale_item_text = True
+                if stale_item_text:
+                    continue
+
                 while card_text == "":
                     card_text = item.text
                     if not zoomed_to_card:
@@ -288,7 +303,6 @@ def main(br) -> None:
                 print("Reached last page on this search")
                 break
             wait_for_insights_to_load(br)
-        #     press_next = True
 
 
 def wait_for_insights_to_load(br: Chrome, max_attempts=10):

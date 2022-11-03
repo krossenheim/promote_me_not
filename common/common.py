@@ -6,10 +6,10 @@ import os
 job_saving_folder_path = '../jobs'
 
 
-def get_browser() -> webdriver.Chrome:
+def get_browser(option_arguments=("--no-sandbox",)) -> webdriver.Chrome:
     chrome_options = Options()
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("general.useragent.override=Android")
+    for argument in option_arguments:
+        chrome_options.add_argument(argument)
     br = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
     return br
 

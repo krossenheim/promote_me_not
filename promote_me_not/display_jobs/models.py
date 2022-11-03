@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from softdelete.models import SoftDeleteObject
 from langdetect import detect
+from langdetect.lang_detect_exception import LangDetectException
 
 
 # Create your models here.
@@ -25,8 +26,11 @@ class JobPosting(SoftDeleteObject, models.Model):
 
     @property
     def language_posted(self):
-        if not self.language_detected:
-            self.language_detected = detect(self.description) if self.description else '00'
+        if not self.language_detected or self.language_detected is None:
+            try:
+                self.language_detected = detect(self.description) if self.description else '00'
+            except LangDetectException:
+                self.language_detected = '00'
             self.save()
         return self.language_detected
 
