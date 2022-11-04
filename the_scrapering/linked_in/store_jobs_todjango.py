@@ -9,7 +9,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser
 from common.secret import PASSWORD, USERNAME
 from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS, JOB_TABS_CONTAINER_CLASSNAME, \
-    MINIMUM_TIME_PER_PAGE_SECONDS
+    MINIMUM_TIME_PER_PAGE_SECONDS, DESCRIPTION_CLASSNAME
 from cookies_store import cookies_get, cookies_load
 import datetime
 import re
@@ -149,7 +149,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
         except NoSuchElementException:
             time.sleep(0.1)
 
-    job_description = job_details.find_element(By.CLASS_NAME, 'jobs-unified-description__content').text
+    job_description = job_details.find_element(By.CLASS_NAME, DESCRIPTION_CLASSNAME).text
     location = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet').text
 
     job = JobPosting(
