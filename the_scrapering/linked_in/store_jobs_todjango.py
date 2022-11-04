@@ -175,7 +175,7 @@ def main(br) -> None:
     cookies_load(br)
     br.get(LOGIN)
     # Used while looking at the element text before clicking on it, thus skipping already-seen-jobs.
-    seen_job_card_texts = [f"{item.title}-{item.company_name}-{item.location}" for item in JobPosting.objects.all()]
+    seen_job_card_texts = [f"{item.title}-{item.company_name}" for item in JobPosting.objects.all()]
 
     # If we're trying to acquire elements that have not loaded yet, we increase this.
     # We time.sleep this number as well as set it as the browser implicit wait time
@@ -205,6 +205,7 @@ def main(br) -> None:
 
             visible_cards = container.find_elements(By.XPATH, "*")
             for n, item in enumerate(visible_cards):
+                zoomed_to_card = False
                 stale_item_text = False
                 for i in range(0, 2):
                     try:
@@ -220,12 +221,13 @@ def main(br) -> None:
                     continue
 
                 while card_text == "":
-                    zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1, print_failure=False)
+                    if zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1, print_failure=False):
+                        zoomed_to_card = True
                     card_text = item.text
                     time.sleep(insights_time_offset)
                 if 'Refine by title' in card_text:
                     continue
-                card_text = "-".join(card_text.split("\n")[0:3])
+                card_text = "-".join(card_text.split("\n")[0:2])
                 if card_text not in seen_job_card_texts:
                     seen_job_card_texts.append(card_text)
                 else:
