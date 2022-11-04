@@ -2,11 +2,25 @@
 {% load bootstrap5 %}
 {% block content %}
 <title>Job posts</title>
-
-<form method="get">
-    {{ filter.form.as_p }}
-    <input type="submit"/>
-</form>
+<script type='text/Javascript'>
+$(document).on('show.bs.modal','#modal', function (event) {
+  var button = $(event.relatedTarget) // Button that triggered the modal
+  var DESCRIPTION = button.data('whatever') // Extract info from data-* attributes
+  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+  // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+  var modal = $(this)
+  modal.find('.descriptiontext').text(DESCRIPTION)
+})
+</script>
+<div>
+    {% include 'display_jobs/modal_dynamic_body.html' %}
+</div>
+<div id=filters class="bg bg-dark text-light">
+    <form method="get">
+        {{ filter.form.as_p }}
+        <input type="submit"/>
+    </form>
+</div>
 <table class="table table-striped table-dark">
     <thead>
 
@@ -23,7 +37,14 @@
         <th scope="row"> {{ forloop.counter }}</th>
         {% for item in jp.get_attributes_ordered_for_table %}
         {% if forloop.counter0 == 1 %}
-        <td><a href={{jp.joburl}}> {{item}} </a></td>
+
+
+        <td>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal"
+                    data-whatever="{{jp.description}}">
+                {{item}}
+            </button>
+        </td>
         {% else %}
         <td>{{item}}</td>
         {% endif %}

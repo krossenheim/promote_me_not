@@ -149,7 +149,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
         except NoSuchElementException:
             time.sleep(0.1)
 
-    job_description = job_details.find_element(By.CLASS_NAME, DESCRIPTION_CLASSNAME).text
+    job_description = job_details.find_element(By.CLASS_NAME, DESCRIPTION_CLASSNAME).get_attribute('innerHTML')
     location = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet').text
 
     job = JobPosting(
