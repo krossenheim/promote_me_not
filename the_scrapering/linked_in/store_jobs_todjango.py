@@ -354,10 +354,9 @@ def lang_detection_thread():
 
 
 if __name__ == "__main__":
+    UNSAVED_JOBS = Queue()
     lang_detect_t = threading.Thread(target=lang_detection_thread, daemon=False)
     lang_detect_t.start()
-
-    UNSAVED_JOBS = Queue()
     browser = get_browser()
     browser.implicitly_wait(0.5)
     browser.set_window_size(1920, 2048)
