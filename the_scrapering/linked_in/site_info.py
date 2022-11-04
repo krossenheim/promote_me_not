@@ -8,6 +8,7 @@ JOB_TABS_CONTAINER_CLASSNAME = 'scaffold-layout__detail'
 MINIMUM_TIME_PER_PAGE_SECONDS = 1.9
 
 geo_ids = {
+    'europe' : '91000002',
     'finland' : '100456013',
     'denmark': '104514075',
     'norway': '103819153',
@@ -17,7 +18,7 @@ geo_ids = {
 
 
 }
-search_terms = "python,software,developer,automation,testing,game,api,flask,django".split(',')
+search_terms = "python,software,developer,automation engineer,automation testing,testing,game,api python,coder,flask,django".split(',')
 bases = (
     'https://www.linkedin.com/jobs/search/?currentJobId=3328383281&f_E=2&geoId=__GEOID__&keywords=',
     'https://www.linkedin.com/jobs/search/?currentJobId=3328383281&geoId=__GEOID__&keywords='

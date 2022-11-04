@@ -95,14 +95,18 @@ def next_page(pagination_box: WebElement) -> bool:
     buttons = pagination_box.find_elements(By.XPATH, "*")
     selected_button = pagination_box.find_element(By.CLASS_NAME, 'selected')
     click_next = False
+    last_page_name = "Undefined/no page in paginator."
     for item in buttons:
         if item == selected_button:
+            last_page_name = item.text
             click_next = True
             continue
+
         if click_next:
             while True:
                 item.click()
                 return True
+    print(f"There is no next page, last page was: {last_page_name}")
     return False
 
 
@@ -145,7 +149,7 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
         except NoSuchElementException:
             time.sleep(0.1)
 
-    job_description = job_details.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
+    job_description = job_details.find_element(By.CLASS_NAME, 'jobs-unified-description__content').text
     location = job_details.find_element(By.CLASS_NAME, 'jobs-unified-top-card__bullet').text
 
     job = JobPosting(
@@ -185,7 +189,7 @@ def main(br) -> None:
 
         while True:
             start_time_on_page = datetime.datetime.now()
-            zoom_to_elements_by_class_name(br, 'scaffold-layout__list-container', 0)
+            zoom_to_elements_by_class_name(br, 'scaffold-layout__list-container', 0, print_failure=False)
 
             try:
                 container = br.find_element(By.CLASS_NAME, 'scaffold-layout__list-container')
@@ -208,7 +212,7 @@ def main(br) -> None:
                         card_text = item.text
                         break
                     except StaleElementReferenceException:
-                        zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
+                        zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1, print_failure=False)
                         print("Oh, the staleness.")
                         time.sleep(0.5)
                         if i == 1:
@@ -219,9 +223,10 @@ def main(br) -> None:
                 while card_text == "":
                     card_text = item.text
                     if not zoomed_to_card:
-                        zoomed_to_card = True
+
                         # Clicking the middle of the element sometimes hits a link instead, this avoids that.
-                        zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
+                        if zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1, print_failure=False):
+                            zoomed_to_card = True
                     time.sleep(insights_time_offset)
                 if 'Refine by title' in card_text:
                     continue
@@ -233,7 +238,7 @@ def main(br) -> None:
 
                 # We need to be able to click on it, the text may have been seen before zooming to it.
                 if not zoomed_to_card:
-                    zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1)
+                    zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1, print_failure=False)
 
                 attempts = 5
                 while attempts:
@@ -275,11 +280,12 @@ def main(br) -> None:
                     except StaleElementReferenceException:
                         print("Stale element exception, retrying.")
                         time.sleep(2)
-                    except NoSuchElementException:
+                    except NoSuchElementException as e:
                         if 'No longer accepting applications' in details.text:
                             print("Skipping, job offer is closed")
                             # TODO: Expand the model to flag closed job positions
                             break
+                        print(str(e))
                     except Exception as e:
                         print(f"Mishandled exception, continuing to next post, exception was: {str(e)}")
                         attempts -= 1
@@ -294,7 +300,7 @@ def main(br) -> None:
             if not zoom_to_elements_by_class_name(br, 'artdeco-pagination__pages', 0):
                 print(
                     f"JavascriptException when scrolling element into view for {3} consecutive attempts.-> Assuming this page has no more entries")
-                print("Reached last page on this search")
+                print("Reached last page on this search (Couldn't zoom to paginator)")
                 break
 
             pagination_box = br.find_element(By.CLASS_NAME, 'artdeco-pagination__pages')
@@ -320,7 +326,7 @@ def wait_for_insights_to_load(br: Chrome, max_attempts=10):
                 raise e
 
 
-def zoom_to_elements_by_class_name(br, class_name, index, max_attempts=4):
+def zoom_to_elements_by_class_name(br, class_name, index, max_attempts=4, print_failure=True):
     rv = False
     for i in range(0, max_attempts + 1):
         try:
@@ -329,7 +335,8 @@ def zoom_to_elements_by_class_name(br, class_name, index, max_attempts=4):
             rv = True
             break
         except JavascriptException:
-            print(f"Couldn't zoom to {class_name}. Retrying.")
+            if print_failure:
+                print(f"Couldn't zoom to {class_name}. Retrying.")
             time.sleep(0.1)
             continue
     return rv
