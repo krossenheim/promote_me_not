@@ -4,12 +4,19 @@
 <title>Job posts</title>
 <script type='text/Javascript'>
 $(document).on('show.bs.modal','#modal', function (event) {
+  $('body').css('overflow','hidden')
   var button = $(event.relatedTarget) // Button that triggered the modal
+  button.toggleClass('btn-primary', 'btn-secondary')
   var DESCRIPTION = button.data('whatever') // Extract info from data-* attributes
   // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
   // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
   var modal = $(this)
-  modal.find('.descriptiontext').text(DESCRIPTION)
+  modal.find('.descriptiontext').html(DESCRIPTION)
+})
+</script>
+<script type='text/Javascript'>
+$(document).on('hide.bs.modal','#modal', function (event) {
+  $('body').css('overflow','auto');
 })
 </script>
 <div>
@@ -34,7 +41,7 @@ $(document).on('show.bs.modal','#modal', function (event) {
     <tbody>
     {% for jp in filter.qs %}
     <tr>
-        <th scope="row"> {{ forloop.counter }}</th>
+        <th scope="row"><a href = '{{jp.joburl}}'>{{ forloop.counter }}</a></th>
         {% for item in jp.get_attributes_ordered_for_table %}
         {% if forloop.counter0 == 1 %}
 

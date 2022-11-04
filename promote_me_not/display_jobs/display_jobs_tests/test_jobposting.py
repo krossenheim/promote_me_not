@@ -14,3 +14,4 @@ class JobPostingTestCase(TestCase):
                 invalid_names.append(item)
         if invalid_names:
             raise AttributeError(f"The list of attributes on JobPosting has invalid attribute names :{invalid_names}")
+

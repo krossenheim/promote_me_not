@@ -1,3 +1,4 @@
+import threading
 import time
 from typing import Any
 from selenium.webdriver import Chrome
@@ -16,6 +17,7 @@ import re
 import os
 import sys
 from django import setup
+from queue import Queue
 import pathlib
 
 project_root = pathlib.Path(__file__).parent.parent.resolve()
@@ -170,6 +172,8 @@ def get_job_posting(job_id: Any, site_name: str, job_details: WebElement) -> Job
 
 
 def main(br) -> None:
+    global UNSAVED_JOBS
+
     br.get(LOGIN)
     # https://www.linkedin.com/jobs/search/?currentJobId=3341349350&f_E=2&geoId=102890719&keywords=python&start=750git
     cookies_load(br)
@@ -265,7 +269,7 @@ def main(br) -> None:
                         job = get_job_posting(job_id, WEBSITE_ALIAS, details)
                         may_exist = JobPosting.objects.filter(job_id=job_id)
                         if not may_exist:
-                            job.save()
+                            UNSAVED_JOBS.put(job)
                         else:
                             may_exist[0].update(job)
                         break
@@ -339,14 +343,26 @@ def zoom_to_elements_by_class_name(br, class_name, index, max_attempts=4, print_
     return rv
 
 
+def lang_detection_thread():
+    global UNSAVED_JOBS
+    while True:
+        if not UNSAVED_JOBS.empty():
+            job = UNSAVED_JOBS.get()
+            job.detect_description_language()
+            print("!")
+            job.save()
+
+
 if __name__ == "__main__":
+    lang_detect_t = threading.Thread(target=lang_detection_thread, daemon=False)
+    lang_detect_t.start()
+
+    UNSAVED_JOBS = Queue()
     browser = get_browser()
     browser.implicitly_wait(0.5)
     browser.set_window_size(1920, 2048)
     try:
         main(browser)
-    # except Exception as e:
-    #     print(f"Crashed at page: {browser.current_url}\n{str(e)}")
     finally:
         print(f"Closed at: {browser.current_url}")
         browser.close()

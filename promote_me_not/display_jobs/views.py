@@ -32,7 +32,7 @@ def main(request):
 
 
 def manual_jobposting_view(request):
-    f = JobPostingFilter(request.GET, queryset=JobPosting.objects.all())
+    f = JobPostingFilter(request.GET, queryset=JobPosting.objects.all().order_by("-retrieval_date"))
     context = {
         'column_names' : [name for name in JobPosting()],
         'filter': f,

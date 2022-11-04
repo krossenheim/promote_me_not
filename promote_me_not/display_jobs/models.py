@@ -27,7 +27,7 @@ class JobPosting(SoftDeleteObject, models.Model):
     language_detected = models.CharField(max_length=2, null=True)
 
     def __init__(self, *args, **kwargs):
-        self.wanted_attributes_for_ordered_table = "entry_level,title,location,first_seen,workplace_type,full_time_or_other,language_detected".split(
+        self.wanted_attributes_for_ordered_table = "entry_level,title,location,first_seen,workplace_type,full_time_or_other,retrieval_date".split(
             ",")
         super().__init__(*args, **kwargs)
 
@@ -54,13 +54,16 @@ class JobPosting(SoftDeleteObject, models.Model):
         rv = [self.__getattribute__(item) for item in self.wanted_attributes_for_ordered_table]
         return rv
 
+    def detect_description_language(self):
+        try:
+            self.language_detected = detect(self.description) if self.description else '00'
+        except LangDetectException:
+            self.language_detected = '00'
+
     @property
     def language_posted(self):
         if not self.language_detected or self.language_detected is None:
-            try:
-                self.language_detected = detect(self.description) if self.description else '00'
-            except LangDetectException:
-                self.language_detected = '00'
+            self.detect_description_language()
             self.save()
         return self.language_detected
 
@@ -80,9 +83,9 @@ class JobPosting(SoftDeleteObject, models.Model):
         )
         applicants_change.save()
         self.retrieval_date = timezone.now()
-
         self.applicants = other.applicants
         self.location = other.location
+        self.description = other.description
 
         self.save()
 
