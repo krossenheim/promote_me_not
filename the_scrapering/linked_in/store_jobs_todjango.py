@@ -205,7 +205,6 @@ def main(br) -> None:
 
             visible_cards = container.find_elements(By.XPATH, "*")
             for n, item in enumerate(visible_cards):
-                zoomed_to_card = False
                 stale_item_text = False
                 for i in range(0, 2):
                     try:
@@ -221,12 +220,8 @@ def main(br) -> None:
                     continue
 
                 while card_text == "":
+                    zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1, print_failure=False)
                     card_text = item.text
-                    if not zoomed_to_card:
-
-                        # Clicking the middle of the element sometimes hits a link instead, this avoids that.
-                        if zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1, print_failure=False):
-                            zoomed_to_card = True
                     time.sleep(insights_time_offset)
                 if 'Refine by title' in card_text:
                     continue
