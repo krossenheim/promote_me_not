@@ -1,9 +1,9 @@
 from selenium.webdriver import Chrome
 from selenium.common.exceptions import InvalidCookieDomainException
 import pickle
-import os
+import pathlib
 
-__cookies_path = "../cookies/linked_in_cookies.pkl"
+__cookies_path = f"{pathlib.Path(__file__).parent.resolve()}/linked_in_cookies.pkl"
 
 
 def cookies_get(br: Chrome) -> None:
