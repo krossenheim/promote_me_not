@@ -3,6 +3,23 @@
 {% block content %}
 <title>Job posts</title>
 <script type='text/Javascript'>
+function toggleMarked(item_pk){
+fetch("{% url 'toggle_marked' %}", {
+headers: {'Accept': 'application/json','Content-Type': 'application/json'},
+method:'POST',
+body:JSON.stringify({"pk":item_pk})}).then((response) => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    console.log(response)
+  }).then((response) => {
+    console.log(response)
+
+  })
+}
+</script>
+<script type='text/Javascript'>
 $(document).on('show.bs.modal','#modal', function (event) {
   $('body').css('overflow','hidden')
   var button = $(event.relatedTarget) // Button that triggered the modal
@@ -19,6 +36,7 @@ $(document).on('hide.bs.modal','#modal', function (event) {
   $('body').css('overflow','auto');
 })
 </script>
+<div>
 <div>
     {% include 'display_jobs/modal_dynamic_body.html' %}
 </div>
@@ -44,8 +62,12 @@ $(document).on('hide.bs.modal','#modal', function (event) {
         <th scope="row"><a href = '{{jp.joburl}}'>{{ forloop.counter }}</a></th>
         {% for item in jp.get_attributes_ordered_for_table %}
         {% if forloop.counter0 == 1 %}
-
-
+        <td>
+            <button type="button" class="btn btn-primary" onclick="toggleMarked({{jp.pk}})">
+                {{item}}
+            </button>
+        </td>
+        {% elif forloop.counter0 == 2 %}
         <td>
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal"
                     data-whatever="{{jp.description}}">
@@ -60,6 +82,6 @@ $(document).on('hide.bs.modal','#modal', function (event) {
     {% endfor %}
     </tbody>
 </table>
-
+</div>
 {% endblock  %}
 

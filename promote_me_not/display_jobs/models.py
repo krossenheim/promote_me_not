@@ -25,9 +25,10 @@ class JobPosting(SoftDeleteObject, models.Model):
     site_scraped_from = models.CharField(max_length=255, null=True)
     entry_level = models.CharField(max_length=255, null=True)
     language_detected = models.CharField(max_length=2, null=True)
+    marked = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
-        self.wanted_attributes_for_ordered_table = "entry_level,title,location,first_seen,workplace_type,full_time_or_other,retrieval_date".split(
+        self.wanted_attributes_for_ordered_table = "entry_level,marked,title,location,first_seen,workplace_type,full_time_or_other,retrieval_date".split(
             ",")
         super().__init__(*args, **kwargs)
 

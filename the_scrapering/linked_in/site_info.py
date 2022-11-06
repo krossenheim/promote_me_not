@@ -21,8 +21,8 @@ geo_ids = {
 }
 search_terms = "python,software,developer,automation engineer,automation testing,testing,game,api python,coder,flask,django".split(',')
 bases = (
-    'https://www.linkedin.com/jobs/search/?currentJobId=3328383281&f_E=2&geoId=__GEOID__&keywords=',
     'https://www.linkedin.com/jobs/search/?currentJobId=3328383281&geoId=__GEOID__&keywords='
+    'https://www.linkedin.com/jobs/search/?currentJobId=3328383281&f_E=2&geoId=__GEOID__&keywords=',
 )
 SEARCH_LINKS = list()
 for search_term in search_terms:

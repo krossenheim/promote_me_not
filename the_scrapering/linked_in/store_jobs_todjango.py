@@ -179,8 +179,9 @@ def main(br) -> None:
     cookies_load(br)
     br.get(LOGIN)
     # Used while looking at the element text before clicking on it, thus skipping already-seen-jobs.
+    print("Loading known jobs..")
     seen_job_card_texts = [f"{item.title}-{item.company_name}" for item in JobPosting.objects.all()]
-
+    print(f"Loaded {len(seen_job_card_texts)} job titles to be skipped.")
     # If we're trying to acquire elements that have not loaded yet, we increase this.
     # We time.sleep this number as well as set it as the browser implicit wait time
     insights_time_offset = 0
@@ -189,6 +190,9 @@ def main(br) -> None:
         lk_login(br)
     for link in SEARCH_LINKS:
         br.get(link)
+        if 'No matching jobs found' in br.page_source:
+            print(f"Linkedin shadowbanned search feature. exit.")
+            exit()
         time.sleep(2)
 
         while True:
@@ -346,16 +350,16 @@ def zoom_to_elements_by_class_name(br, class_name, index, max_attempts=4, print_
 def lang_detection_thread():
     global UNSAVED_JOBS
     while True:
-        if not UNSAVED_JOBS.empty():
+        time.sleep(5)
+        while not UNSAVED_JOBS.empty():
             job = UNSAVED_JOBS.get()
             job.detect_description_language()
-            print("!")
             job.save()
 
 
 if __name__ == "__main__":
     UNSAVED_JOBS = Queue()
-    lang_detect_t = threading.Thread(target=lang_detection_thread, daemon=False)
+    lang_detect_t = threading.Thread(target=lang_detection_thread, daemon=True)
     lang_detect_t.start()
     browser = get_browser()
     browser.implicitly_wait(0.5)
