@@ -1,0 +1,16 @@
+FROM alpine:latest
+
+RUN apk add --update \
+    py3-pip \
+    python3 \
+    chromium \
+    chromium-chromedriver
+
+COPY . /promote_me_not
+WORKDIR /promote_me_not
+
+RUN pip3 install -r requirements.txt
+
+# Issue with chromedriver not being found after using chromedrivermanager.
+# cmd ["python3","the_scrapering/linked_in/store_jobs_todjango.py"]
+
