@@ -1,3 +1,12 @@
+import pathlib
+import sys
+
+project_root = pathlib.Path(__file__).parent.parent.resolve()
+sys.path.append(f"{project_root}")
+django_root = f"{pathlib.Path(__file__).parent.parent.parent.resolve()}/promote_me_not"
+sys.path.append(f"{django_root}")
+
+print(sys.path)
 import threading
 import time
 from typing import Any
@@ -15,13 +24,8 @@ from cookies_store import cookies_get, cookies_load
 import datetime
 import re
 import os
-import sys
 from django import setup
 from queue import Queue
-import pathlib
-
-project_root = pathlib.Path(__file__).parent.parent.resolve()
-sys.path.append(f"{project_root}/promote_me_not")
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'promote_me_not.settings')
 setup()
@@ -222,6 +226,8 @@ def main(br) -> None:
                     except StaleElementReferenceException:
                         zoom_to_elements_by_class_name(br, 'job-card-list__title', n - 1, print_failure=False)
                         print("Oh, the staleness.")
+                        if 'No matching jobs found' in br.page_source:
+                            break
                         time.sleep(0.5)
                         if i == 1:
                             stale_item_text = True
