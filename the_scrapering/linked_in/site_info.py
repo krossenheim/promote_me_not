@@ -5,7 +5,7 @@ LOGIN = 'https://www.linkedin.com/login'
 HOME = 'https://www.linkedin.com'
 WEBSITE_ALIAS = "linked_in"
 JOB_TABS_CONTAINER_CLASSNAME = 'scaffold-layout__detail'
-DESCRIPTION_CLASSNAME = 'jobs-unified-description__content' if ('jantequera' in str(Path(__file__).resolve()) or 'autom' in str(Path(__file__).resolve())) else 'jobs-description-content__text'
+DESCRIPTION_CLASSNAME = 'jobs-unified-description__content'# if ('jantequera' in str(Path(__file__).resolve()) or 'autom' in str(Path(__file__).resolve())) else 'jobs-description-content__text'
 MINIMUM_TIME_PER_PAGE_SECONDS = 1.9
 
 geo_ids = {
