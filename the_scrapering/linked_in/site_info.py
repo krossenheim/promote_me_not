@@ -9,13 +9,14 @@ DESCRIPTION_CLASSNAME = 'jobs-unified-description__content'# if ('jantequera' in
 MINIMUM_TIME_PER_PAGE_SECONDS = 1.9
 
 geo_ids = {
-    'switz' : '106693272',
+    'ger': '101282230',
     'europe' : '91000002',
+    'netherlands': '102890719',
     'finland' : '100456013',
     'denmark': '104514075',
     'norway': '103819153',
+    'switz': '106693272',
     'spain': '105646813',
-    'netherlands': '102890719',
     'sweden': '105117694',
 
 

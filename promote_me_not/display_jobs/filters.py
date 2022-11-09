@@ -8,28 +8,41 @@ from django.db.models import Q
 class JobPostingFilter(django_filters.FilterSet):
     title_contains = django_filters.CharFilter(field_name='title',
                                                lookup_expr='contains')
+    title_not_contains = django_filters.CharFilter(
+        method='title_not_contains_method',
+        label='Title not contains',
+        widget=widgets.TextInput(attrs={'placeholder': 'Does not contain'})
+    )
     description_contains = django_filters.CharFilter(
         method='description_does_contain',
+        label='Description contains',
         widget=widgets.TextInput(attrs={'placeholder': 'Does contain'})
     )
     description_contains1 = django_filters.CharFilter(
         method='description_does_contain',
+        label='Description contains',
+
         widget=widgets.TextInput(attrs={'placeholder': 'Does contain'})
     )
     description_contains2 = django_filters.CharFilter(
         method='description_does_contain',
+        label='Description contains',
+
         widget=widgets.TextInput(attrs={'placeholder': 'Does contain'})
     )
     description_contains_not = django_filters.CharFilter(
         method='description_does_not_contain',
+        label='Description does not contain',
         widget=widgets.TextInput(attrs={'placeholder': 'Does not contain'})
     )
     description_contains_not1 = django_filters.CharFilter(
         method='description_does_not_contain',
+        label='Description does not contain',
         widget=widgets.TextInput(attrs={'placeholder': 'Does not contain'})
     )
     description_contains_not2 = django_filters.CharFilter(
         method='description_does_not_contain',
+        label='Description does not contain',
         widget=widgets.TextInput(attrs={'placeholder': 'Does not contain'})
     )
     posted_date = django_filters.DateFilter(field_name='posted_date', lookup_expr='gt')
@@ -38,18 +51,43 @@ class JobPostingFilter(django_filters.FilterSet):
                                          lookup_expr='contains',
                                          initial='en')
 
-    worplace_type = django_filters.CharFilter(field_name='workplace_type',
-                                              lookup_expr='iexact',
-                                              initial='Remote')
+    workplace_type_contains = django_filters.CharFilter(
+        method='workplace_type_contains_method',
+        initial='Remote,',
+        label='Workplace contains',
+        widget=widgets.TextInput(attrs={'placeholder': 'Does not contain'})
+    )
     linkedin_id = django_filters.NumberFilter(
         field_name='job_id',
         lookup_expr='iexact'
     )
 
+    include_marked = django_filters.BooleanFilter(
+        method='include_marked_method',
+        initial='No',
+        label='Include marked items')
+
+
     scraped_minutes_ago = django_filters.NumberFilter(
         method='scraped_minutes_ago_method',
         widget=widgets.TextInput(attrs={'placeholder': 'Minutes back known'})
     )
+
+    def include_marked_method(self, qs, name, value):
+        print(value)
+        return qs.exclude(Q(marked=True) if not value else Q())
+
+    def title_not_contains_method(self, qs, name, value):
+        queryset_condition = Q()
+        for item in value.split(","):
+            queryset_condition = queryset_condition | Q(title__icontains=item)
+        return qs.exclude(queryset_condition)
+
+    def workplace_type_contains_method(self, qs, name, value):
+        queryset_condition = Q()
+        for item in value.split(","):
+            queryset_condition = queryset_condition | Q(workplace_type__icontains=item)
+        return qs.filter(queryset_condition)
 
     def description_does_contain(self, qs, name, value):
         queryset_condition = Q()

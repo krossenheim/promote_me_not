@@ -3,85 +3,137 @@
 {% block content %}
 <title>Job posts</title>
 <script type='text/Javascript'>
-function toggleMarked(item_pk){
-fetch("{% url 'toggle_marked' %}", {
+async function toggleFavourited(item_pk){
+await fetch("{% url 'toggle_favourited' %}", {
 headers: {'Accept': 'application/json','Content-Type': 'application/json'},
 method:'POST',
 body:JSON.stringify({"pk":item_pk})}).then((response) => {
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
+    const res_values = response.json()
+    return res_values
+  }).then((val) => {
+    if (val.Status == "Success"){
+<!--    $("#button"+item_pk).parent().parent().remove()-->
 
-    console.log(response)
-  }).then((response) => {
-    console.log(response)
+    if (val.Payload.favourited_value_now)
+        newval = "Y"
+    else
+        newval = "N"
+    var button = $("#buttonfav"+item_pk)
+    button.text(newval)
+    button.toggleClass('btn-primary')
+    button.toggleClass('btn-success')
 
+    }
   })
 }
+
+
+</script>
+<script type='text/Javascript'>
+async function toggleMarked(item_pk){
+await fetch("{% url 'toggle_marked' %}", {
+headers: {'Accept': 'application/json','Content-Type': 'application/json'},
+method:'POST',
+body:JSON.stringify({"pk":item_pk})}).then((response) => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const res_values = response.json()
+    return res_values
+  }).then((val) => {
+    if (val.Status == "Success"){
+<!--    $("#button"+item_pk).parent().parent().remove()-->
+
+    if (val.Payload.marked_value_now)
+        newval = "Y"
+    else
+        newval = "N"
+    var button = $("#buttonmarked"+item_pk)
+    button.text(newval)
+    button.toggleClass('btn-primary')
+    button.toggleClass('btn-warning')
+
+    }
+  })
+}
+
+
 </script>
 <script type='text/Javascript'>
 $(document).on('show.bs.modal','#modal', function (event) {
   $('body').css('overflow','hidden')
   var button = $(event.relatedTarget) // Button that triggered the modal
-  button.toggleClass('btn-primary', 'btn-secondary')
+  button.toggleClass('btn-primary')
+  button.toggleClass('btn-secondary')
   var DESCRIPTION = button.data('whatever') // Extract info from data-* attributes
   // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
   // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
   var modal = $(this)
   modal.find('.descriptiontext').html(DESCRIPTION)
 })
+
 </script>
 <script type='text/Javascript'>
 $(document).on('hide.bs.modal','#modal', function (event) {
   $('body').css('overflow','auto');
 })
+
 </script>
 <div>
-<div>
-    {% include 'display_jobs/modal_dynamic_body.html' %}
-</div>
-<div id=filters class="bg bg-dark text-light">
-    <form method="get">
-        {{ filter.form.as_p }}
-        <input type="submit"/>
-    </form>
-</div>
-<table class="table table-striped table-dark">
-    <thead>
+    <div>
+        {% include 'display_jobs/modal_dynamic_body.html' %}
+    </div>
+    <div id=filters class="bg bg-dark text-light">
+        <form method="get">
+            {{ filter.form.as_p }}
+            <input type="submit"/>
+        </form>
+    </div>
+    <table class="table table-striped table-dark">
+        <thead>
 
-    <tr>
-        <th scope="col">#</th>
-        {% for item in column_names %}
-        <th scope="col">{{ item }}</th>
-        {% endfor %}
-    </tr>
-    </thead>
-    <tbody>
-    {% for jp in filter.qs %}
-    <tr>
-        <th scope="row"><a href = '{{jp.joburl}}'>{{ forloop.counter }}</a></th>
-        {% for item in jp.get_attributes_ordered_for_table %}
-        {% if forloop.counter0 == 1 %}
-        <td>
-            <button type="button" class="btn btn-primary" onclick="toggleMarked({{jp.pk}})">
-                {{item}}
+        <tr>
+            <th scope="col">#</th>
+            {% for item in column_names %}
+            <th scope="col">{{ item }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for jp in filter.qs %}
+        <tr>
+            <th scope="row"><a href='{{jp.joburl}}'>{{ forloop.counter }}</a></th>
+            {% for item in jp.get_attributes_ordered_for_table %}
+            {% if forloop.counter0 == 1 %}
+            <td>
+                <button id = "buttonmarked{{jp.pk}}" type="button" class="btn {% if item %} btn-warning {% else %} btn-primary {% endif %}" onclick="toggleMarked({{jp.pk}})">
+                    {% if item %} Y {% else %} N {% endif %}
+                </button>
+            </td>
+            {% elif forloop.counter0 == 2 %}
+            <td>
+            <button id = "buttonfav{{jp.pk}}" type="button" class="btn {% if item %} btn-success {% else %} btn-primary {% endif %}" onclick="toggleFavourited({{jp.pk}})">
+                {% if item %} Y {% else %} N {% endif %}
             </button>
-        </td>
-        {% elif forloop.counter0 == 2 %}
-        <td>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal"
-                    data-whatever="{{jp.description}}">
-                {{item}}
-            </button>
-        </td>
-        {% else %}
-        <td>{{item}}</td>
-        {% endif %}
+            </td>
+            {% elif forloop.counter0 == 3 %}
+            <td>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal"
+                        data-whatever="{{jp.description}}">
+                    {{item}}
+                </button>
+            </td>
+            {% else %}
+            <td>{{item}}</td>
+            {% endif %}
+            {% endfor %}
+        </tr>
         {% endfor %}
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
 </div>
 {% endblock  %}
 

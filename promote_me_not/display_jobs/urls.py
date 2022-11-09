@@ -7,5 +7,6 @@ urlpatterns = [
     path('filtered/', views.JobPostingFilterView.as_view()),
     path('man/', views.manual_jobposting_view),
     path('toggle_marked/', views.toggle_marked_attribute, name = 'toggle_marked'),
+    path('toggle_favourited/', views.toggle_favourited_attribute, name='toggle_favourited'),
 
 ]

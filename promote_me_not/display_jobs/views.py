@@ -5,11 +5,12 @@ from django.views.generic import ListView
 from django_tables2 import SingleTableView, SingleTableMixin
 from django_filters.views import FilterView
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_protect,csrf_exempt
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
 
 from .filters import JobPostingFilter
 from .models import JobPosting
 from .tables import JobPostingTable
+import time
 
 
 class JobPostingListView(ListView):
@@ -31,17 +32,42 @@ class JobPostingFilterView(SingleTableMixin, FilterView):
     filterset_class = JobPostingFilter
 
 
+def standardJsonResponse(status: str = "", message: str = "", payload: dict = None):
+    rv = {
+        'Status': status,
+        'Message': message,
+        'Payload': dict() if payload is None else payload
+    }
+    return JsonResponse(rv)
+
+
 @csrf_exempt
 def toggle_marked_attribute(request):
     if request.method != "POST":
-        return JsonResponse({'Status': 'Failure', "Message": "Bad request."})
+        return standardJsonResponse(status="Failure", message="Bad request.")
     data = json.loads(request.body)
     job = JobPosting.objects.filter(pk=data['pk'])
     if not job:
-        return JsonResponse({'Status': 'Failure', "Message": "No such pk."})
+        return standardJsonResponse(status="Failure", message="No such job id")
     job[0].marked = not job[0].marked
     job[0].save()
-    return JsonResponse({'Status': 'Success', "Message": "Toggled attribute marked.."})
+    return standardJsonResponse(status='Success',
+                                message='Toggle attiribute marked.',
+                                payload={'marked_value_now': job[0].marked})
+
+@csrf_exempt
+def toggle_favourited_attribute(request):
+    if request.method != "POST":
+        return standardJsonResponse(status="Failure", message="Bad request.")
+    data = json.loads(request.body)
+    job = JobPosting.objects.filter(pk=data['pk'])
+    if not job:
+        return standardJsonResponse(status="Failure", message="No such job id")
+    job[0].favourited = not job[0].favourited
+    job[0].save()
+    return standardJsonResponse(status='Success',
+                                message='Toggle attiribute favourited.',
+                                payload={'favourited_value_now': job[0].favourited})
 
 
 # Create your views here.
