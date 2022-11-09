@@ -101,7 +101,11 @@ $(document).on('hide.bs.modal','#modal', function (event) {
         <tr>
             <th scope="col">#</th>
             {% for item in column_names %}
+            {% if item == title %}
+            <th style = "max-width: 1px" scope="col">{{ item }}</th>
+            {% else %}
             <th scope="col">{{ item }}</th>
+            {% endif %}
             {% endfor %}
         </tr>
         </thead>

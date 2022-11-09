@@ -62,6 +62,11 @@ class JobPostingFilter(django_filters.FilterSet):
         lookup_expr='iexact'
     )
 
+    applicants = django_filters.NumberFilter(
+        field_name='applicants',
+        lookup_expr='lte'
+    )
+
     include_marked = django_filters.BooleanFilter(
         method='include_marked_method',
         initial='No',

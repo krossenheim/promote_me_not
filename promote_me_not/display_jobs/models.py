@@ -29,7 +29,7 @@ class JobPosting(SoftDeleteObject, models.Model):
     favourited = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
-        self.wanted_attributes_for_ordered_table = "entry_level,marked,favourited,title,location,first_seen,workplace_type,full_time_or_other,retrieval_date".split(
+        self.wanted_attributes_for_ordered_table = "entry_level,marked,favourited,title,applicants,location,first_seen,workplace_type,full_time_or_other,retrieval_date".split(
             ",")
         super().__init__(*args, **kwargs)
 
