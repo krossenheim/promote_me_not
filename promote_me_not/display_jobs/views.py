@@ -32,7 +32,7 @@ class JobPostingFilterView(SingleTableMixin, FilterView):
     filterset_class = JobPostingFilter
 
 
-def standardJsonResponse(status: str = "", message: str = "", payload: dict = None):
+def standard_json_response(status: str = "", message: str = "", payload: dict = None):
     rv = {
         'Status': status,
         'Message': message,
@@ -44,30 +44,31 @@ def standardJsonResponse(status: str = "", message: str = "", payload: dict = No
 @csrf_exempt
 def toggle_marked_attribute(request):
     if request.method != "POST":
-        return standardJsonResponse(status="Failure", message="Bad request.")
+        return standard_json_response(status="Failure", message="Bad request.")
     data = json.loads(request.body)
     job = JobPosting.objects.filter(pk=data['pk'])
     if not job:
-        return standardJsonResponse(status="Failure", message="No such job id")
+        return standard_json_response(status="Failure", message="No such job id")
     job[0].marked = not job[0].marked
     job[0].save()
-    return standardJsonResponse(status='Success',
-                                message='Toggle attiribute marked.',
-                                payload={'marked_value_now': job[0].marked})
+    return standard_json_response(status='Success',
+                                  message='Toggle attiribute marked.',
+                                  payload={'marked_value_now': job[0].marked})
+
 
 @csrf_exempt
 def toggle_favourited_attribute(request):
     if request.method != "POST":
-        return standardJsonResponse(status="Failure", message="Bad request.")
+        return standard_json_response(status="Failure", message="Bad request.")
     data = json.loads(request.body)
     job = JobPosting.objects.filter(pk=data['pk'])
     if not job:
-        return standardJsonResponse(status="Failure", message="No such job id")
+        return standard_json_response(status="Failure", message="No such job id")
     job[0].favourited = not job[0].favourited
     job[0].save()
-    return standardJsonResponse(status='Success',
-                                message='Toggle attiribute favourited.',
-                                payload={'favourited_value_now': job[0].favourited})
+    return standard_json_response(status='Success',
+                                  message='Toggle attiribute favourited.',
+                                  payload={'favourited_value_now': job[0].favourited})
 
 
 # Create your views here.

@@ -60,7 +60,7 @@ body:JSON.stringify({"pk":item_pk})}).then((response) => {
   })
 }
 
-
+var button_global;
 </script>
 <script type='text/Javascript'>
 $(document).on('show.bs.modal','#modal', function (event) {
@@ -68,6 +68,7 @@ $(document).on('show.bs.modal','#modal', function (event) {
   var button = $(event.relatedTarget) // Button that triggered the modal
   button.toggleClass('btn-primary')
   button.toggleClass('btn-secondary')
+  button_global = button
   var DESCRIPTION = button.data('whatever') // Extract info from data-* attributes
   // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
   // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
@@ -79,6 +80,8 @@ $(document).on('show.bs.modal','#modal', function (event) {
 <script type='text/Javascript'>
 $(document).on('hide.bs.modal','#modal', function (event) {
   $('body').css('overflow','auto');
+    button_global.toggleClass('btn-primary')
+  button_global.toggleClass('btn-secondary')
 })
 
 </script>
