@@ -9,7 +9,7 @@ from langdetect.lang_detect_exception import LangDetectException
 
 # Create your models here.
 class JobPosting(SoftDeleteObject, models.Model):
-    job_id = models.IntegerField(unique=True, default=0)
+    job_id = models.IntegerField(default=0)
     retrieval_date = models.DateTimeField(default=timezone.now)
     first_seen = models.DateTimeField(default=None)
     posted_date = models.DateTimeField(default=timezone.now)
@@ -39,6 +39,8 @@ class JobPosting(SoftDeleteObject, models.Model):
 
     @property
     def joburl(self):
+        if self.site_scraped_from != 'linkedin':
+            return f"https://itjobs.ai/Finland/job/{self.job_id}"
         return f"https://www.linkedin.com/jobs/view/{self.job_id}"
 
 
