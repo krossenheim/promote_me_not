@@ -72,7 +72,6 @@ class JobPostingFilter(django_filters.FilterSet):
         initial='No',
         label='Include marked items')
 
-
     scraped_minutes_ago = django_filters.NumberFilter(
         method='scraped_minutes_ago_method',
         widget=widgets.TextInput(attrs={'placeholder': 'Minutes back known'})

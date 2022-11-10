@@ -20,7 +20,7 @@ from common.common import get_browser
 from common.secret import PASSWORD, USERNAME
 from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS, JOB_TABS_CONTAINER_CLASSNAME, \
     MINIMUM_TIME_PER_PAGE_SECONDS, DESCRIPTION_CLASSNAME
-from cookies_store import cookies_get, cookies_load
+from common.cookies_store import cookies_get, cookies_load
 import datetime
 import re
 import os
@@ -190,10 +190,14 @@ def main(br) -> None:
     # We time.sleep this number as well as set it as the browser implicit wait time
     insights_time_offset = 0
     element_intercept_click_offset = 0.3
+    prev_ignored = 0
+
     if not is_logged_in(br):
         lk_login(br)
     for link in SEARCH_LINKS:
         br.get(link)
+        print(f"Scraping {link}, previously ignored {prev_ignored} posts.")
+        prev_ignored = 0
         if 'No matching jobs found' in br.page_source:
             print(f"Linkedin shadowbanned search feature. exit.")
             exit()
@@ -245,6 +249,7 @@ def main(br) -> None:
                 if card_text not in seen_job_card_texts:
                     seen_job_card_texts.append(card_text)
                 else:
+                    prev_ignored += 1
                     continue
 
                 # We need to be able to click on it, the text may have been seen before zooming to it.
