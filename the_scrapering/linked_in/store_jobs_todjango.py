@@ -6,7 +6,6 @@ sys.path.append(f"{project_root}")
 django_root = f"{pathlib.Path(__file__).parent.parent.parent.resolve()}/promote_me_not"
 sys.path.append(f"{django_root}")
 
-print(sys.path)
 import threading
 import time
 from typing import Any
@@ -17,7 +16,7 @@ from selenium.common.exceptions import JavascriptException, NoSuchElementExcepti
     ElementClickInterceptedException
 from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser
-from common.secret import PASSWORD, USERNAME
+from linked_in.secret import PASSWORD, USERNAME
 from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS, JOB_TABS_CONTAINER_CLASSNAME, \
     MINIMUM_TIME_PER_PAGE_SECONDS, DESCRIPTION_CLASSNAME
 from common.cookies_store import cookies_get, cookies_load
