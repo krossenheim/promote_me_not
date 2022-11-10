@@ -15,7 +15,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import JavascriptException, NoSuchElementException, StaleElementReferenceException, \
     ElementClickInterceptedException
 from selenium.webdriver.remote.webelement import WebElement
-from common.common import get_browser
+from common.common import get_browser, UNIT_VALUES
 from linked_in.secret import PASSWORD, USERNAME
 from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS, JOB_TABS_CONTAINER_CLASSNAME, \
     MINIMUM_TIME_PER_PAGE_SECONDS, DESCRIPTION_CLASSNAME
@@ -30,23 +30,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'promote_me_not.settings')
 setup()
 from display_jobs.models import JobPosting
 from django.utils import timezone
-
-UNIT_VALUES = {
-    'seconds': 1,
-    'second': 1,
-    'minutes': 60,
-    'minute': 60,
-    'hour': 60 * 60,
-    'hours': 60 * 60,
-    'day': 60 * 24 * 60,
-    'days': 60 * 24 * 60,
-    'week': 60 * 24 * 60 * 7,
-    'weeks': 60 * 24 * 60 * 7,
-    'month': 60 * 24 * 60 * 30,
-    'months': 60 * 24 * 60 * 30,
-    'years': 60 * 24 * 60 * 30 * 12,
-    'year': 60 * 24 * 60 * 30 * 12,
-}
 
 
 def verified_human(br: Chrome) -> bool:
@@ -183,7 +166,7 @@ def main(br) -> None:
     br.get(LOGIN)
     # Used while looking at the element text before clicking on it, thus skipping already-seen-jobs.
     print("Loading known jobs..")
-    seen_job_card_texts = [f"{item.title}-{item.company_name}" for item in JobPosting.objects.all()]
+    seen_job_card_texts = [f"{item.title}-{item.company_name}" for item in JobPosting.objects.filter(site_scraped_from=WEBSITE_ALIAS)]
     print(f"Loaded {len(seen_job_card_texts)} job titles to be skipped.")
     # If we're trying to acquire elements that have not loaded yet, we increase this.
     # We time.sleep this number as well as set it as the browser implicit wait time
@@ -281,7 +264,7 @@ def main(br) -> None:
                     try:
                         job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
                         job = get_job_posting(job_id, WEBSITE_ALIAS, details)
-                        may_exist = JobPosting.objects.filter(job_id=job_id)
+                        may_exist = JobPosting.objects.filter(job_id=job_id,site_scraped_from=WEBSITE_ALIAS)
                         if not may_exist:
                             UNSAVED_JOBS.put(job)
                         else:
