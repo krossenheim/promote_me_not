@@ -7,7 +7,7 @@ WEBSITE_ALIAS = "linked_in"
 JOB_TABS_CONTAINER_CLASSNAME = 'scaffold-layout__detail'
 DESCRIPTION_CLASSNAME = 'jobs-unified-description__content'  # if ('jantequera' in str(Path(__file__).resolve()) or 'autom' in str(Path(__file__).resolve())) else 'jobs-description-content__text'
 MINIMUM_TIME_PER_PAGE_SECONDS = 1.9
-
+INSIGHTS_TIME_OFFSET_MAX = 3.5
 geo_ids = {
     'netherlands': '102890719',
     'europe': '91000002',

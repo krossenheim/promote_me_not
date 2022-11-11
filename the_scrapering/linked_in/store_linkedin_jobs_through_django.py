@@ -18,7 +18,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser, UNIT_VALUES
 from linked_in.lk_secret import PASSWORD, USERNAME
 from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS, JOB_TABS_CONTAINER_CLASSNAME, \
-    MINIMUM_TIME_PER_PAGE_SECONDS, DESCRIPTION_CLASSNAME
+    MINIMUM_TIME_PER_PAGE_SECONDS, DESCRIPTION_CLASSNAME, INSIGHTS_TIME_OFFSET_MAX
 from common.cookies_store import cookies_get, cookies_load
 import datetime
 import re
@@ -227,7 +227,7 @@ def main(br) -> None:
                     time.sleep(insights_time_offset)
                 if 'Refine by title' in card_text:
                     continue
-                card_text = "-".join(card_text.split("\n")[0:2])
+                card_text = "-".join([item.trim() for item in card_text.split("\n")[0:2]])
                 if card_text not in seen_job_card_texts:
                     seen_job_card_texts.append(card_text)
                 else:
@@ -257,12 +257,14 @@ def main(br) -> None:
                     raise RuntimeError("Mistakes were made.")
 
                 attempts = 4
+                job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
                 while True:
+                    if not attempts:
+                        break
                     time.sleep(insights_time_offset)
                     details = br.find_element(By.CLASS_NAME, JOB_TABS_CONTAINER_CLASSNAME)
 
                     try:
-                        job_id = re.search(r"currentJobId=(.+?)&", br.current_url)[1]
                         job = get_job_posting(job_id, WEBSITE_ALIAS, details)
                         may_exist = JobPosting.objects.filter(job_id=job_id,site_scraped_from=WEBSITE_ALIAS)
                         if not may_exist:
@@ -272,9 +274,10 @@ def main(br) -> None:
                         break
                     except LinkedInInsightsNotLoaded:
                         print("Insights not loaded, retrying.")
-                        insights_time_offset += 0.025
-                        br.implicitly_wait(0.5 + insights_time_offset)
+                        insights_time_offset += 0.025 if insights_time_offset < INSIGHTS_TIME_OFFSET_MAX else 0
+                        br.implicitly_wait(min(0.5 + insights_time_offset,2))
                         time.sleep(insights_time_offset)
+                        attempts-=1
                     except StaleElementReferenceException:
                         print("Stale element exception, retrying.")
                         time.sleep(2)
@@ -284,10 +287,9 @@ def main(br) -> None:
                             # TODO: Expand the model to flag closed job positions
                             break
                         print(str(e))
-                    except Exception as e:
-                        print(f"Mishandled exception, continuing to next post, exception was: {str(e)}")
-                        attempts -= 1
-                        time.sleep(4 - attempts)
+                if not attempts:
+                    print(f"Skipped job id {job_id}")
+                    continue
 
             wait_for_insights_to_load(br)
 

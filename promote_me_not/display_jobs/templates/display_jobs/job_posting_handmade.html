@@ -131,7 +131,7 @@ $(document).on('hide.bs.modal','#modal', function (event) {
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal"
                         data-whatever="{{jp.description}}">
                     {{item|slice:":100"}}
-                </button>
+                </button><br>{{jp.company_name}}
             </td>
             {% else %}
             <td>{{item}}</td>
