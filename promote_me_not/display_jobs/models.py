@@ -39,7 +39,7 @@ class JobPosting(SoftDeleteObject, models.Model):
 
     @property
     def joburl(self):
-        if self.site_scraped_from != 'linkedin':
+        if self.site_scraped_from != 'linked_in':
             return f"https://itjobs.ai/Finland/job/{self.job_id}"
         return f"https://www.linkedin.com/jobs/view/{self.job_id}"
 

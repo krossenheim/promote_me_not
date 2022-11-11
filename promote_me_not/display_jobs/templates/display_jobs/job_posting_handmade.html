@@ -130,7 +130,7 @@ $(document).on('hide.bs.modal','#modal', function (event) {
             <td>
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal"
                         data-whatever="{{jp.description}}">
-                    {{item}}
+                    {{item|slice:":100"}}
                 </button>
             </td>
             {% else %}
