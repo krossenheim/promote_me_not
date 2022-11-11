@@ -6,6 +6,7 @@ sys.path.append(f"{project_root}")
 django_root = f"{pathlib.Path(__file__).parent.parent.parent.resolve()}/promote_me_not"
 sys.path.append(f"{django_root}")
 
+from dateutil import parser
 import threading
 import time
 from selenium.webdriver import Chrome
@@ -61,9 +62,12 @@ def main(br: Chrome):
             job_title_element = job_card_element.find_element(By.CLASS_NAME, "job-header")
             job_title = job_title_element.text
             job_locat = job_card_element.find_element(By.CLASS_NAME, 'company-location').text
-            job_comp = job_card_element.find_element(By.CLASS_NAME, 'common-link').text
         except (NoSuchElementException,StaleElementReferenceException):
             continue
+        try:
+            job_comp = job_card_element.find_element(By.CLASS_NAME, 'company-row').find_element(By.CLASS_NAME, 'common-link').text
+        except NoSuchElementException:
+            job_comp = "NotFound"
         seen_job_card_text = f"{job_title}-{job_comp}-{job_locat}"
         if seen_job_card_text in seen_job_card_texts:
             print(f"Skipping {seen_job_card_text}")
@@ -82,11 +86,11 @@ def main(br: Chrome):
                 break
             try:
                 title = job_details_element.find_elements(By.XPATH, "*")[1].text
-                break
             except StaleElementReferenceException:
                 pass
 
         if title != job_title:
+            print(f"Title {title} != {job_title}")
             continue
         job_features_element = job_details_element.find_element(By.CLASS_NAME, 'job-features')
         job_features_children_elements = job_features_element.find_elements(By.XPATH, "*")
@@ -98,11 +102,13 @@ def main(br: Chrome):
         location = job_features_children_elements[1 + offset].text
         date_listed_str = job_features_children_elements[2 + offset].find_elements(By.XPATH, "*")[1].get_attribute(
             'datetime')
-        date_listed = datetime.datetime.strptime(date_listed_str,"%Y-%m-%dT%H:%M:%S")
+        date_listed = parser.parse(date_listed_str)
         external_url = job_features_children_elements[3 + offset].text
         tags_html = job_features_children_elements[4 + offset].get_attribute('innerHTML')
         description_html = job_details_element.find_element(By.CLASS_NAME,
                                                             'job-description-block').get_attribute('innerHTML')
+        remove_second_child_of_infinite_scroll_component(br)
+
         full_description = f"{tags_html}<br><br>{description_html}"
         job_id = br.current_url.split("/")[-1]
 
@@ -117,7 +123,6 @@ def main(br: Chrome):
 
         )
         UNSAVED_JOBS.put(job)
-        remove_second_child_of_infinite_scroll_component(br)
 
 
 def scroll_to_second_child_of_infinite_scroll_component(br: Chrome) -> bool:
@@ -152,7 +157,7 @@ if __name__ == "__main__":
     UNSAVED_JOBS = Queue()
     lang_detect_t = threading.Thread(target=lang_detection_thread, daemon=True)
     lang_detect_t.start()
-    browser = get_browser(option_arguments=tuple())
+    browser = get_browser()
     browser.implicitly_wait(0.5)
     browser.set_window_size(1920, 2048)
     try:

@@ -117,6 +117,7 @@ ENV/
 env.bak/
 venv.bak/
 *cookies.pkl
+*secret.py
 # Spyder project settings
 .spyderproject
 .spyproject

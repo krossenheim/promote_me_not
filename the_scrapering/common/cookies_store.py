@@ -1,19 +1,16 @@
 from selenium.webdriver import Chrome
 from selenium.common.exceptions import InvalidCookieDomainException
 import pickle
-import pathlib
-
-__cookies_path = f"{pathlib.Path(__file__).parent.resolve()}/linked_in_cookies.pkl"
 
 
-def cookies_get(br: Chrome) -> None:
+def cookies_get(br: Chrome, file_path: str) -> None:
     print("Saving cookies.")
-    pickle.dump(br.get_cookies(), open(__cookies_path, "wb"))
+    pickle.dump(br.get_cookies(), open(file_path, "wb"))
 
 
-def cookies_load(br: Chrome) -> bool:
+def cookies_load(br: Chrome, file_path: str) -> bool:
     try:
-        cookies = pickle.load(open(__cookies_path, "rb"))
+        cookies = pickle.load(open(file_path, "rb"))
         print("Loaded cookies.")
     except (EOFError, FileNotFoundError):
         print("No cookies saved, file is empty.")

@@ -16,7 +16,7 @@ from selenium.common.exceptions import JavascriptException, NoSuchElementExcepti
     ElementClickInterceptedException
 from selenium.webdriver.remote.webelement import WebElement
 from common.common import get_browser, UNIT_VALUES
-from linked_in.secret import PASSWORD, USERNAME
+from linked_in.lk_secret import PASSWORD, USERNAME
 from linked_in.site_info import LOGIN, SEARCH_LINKS, WEBSITE_ALIAS, JOB_TABS_CONTAINER_CLASSNAME, \
     MINIMUM_TIME_PER_PAGE_SECONDS, DESCRIPTION_CLASSNAME
 from common.cookies_store import cookies_get, cookies_load
@@ -47,7 +47,7 @@ def is_logged_in(br: Chrome, max_tries=4) -> bool:
         try:
             br.find_element(By.CLASS_NAME, 'ember-application')
             print("User logged in, grabbing cookies.")
-            cookies_get(br)
+            cookies_get(br, f"{WEBSITE_ALIAS}_cookies.pkl")
             return True
         except:
             if attempt == max_tries:
@@ -69,7 +69,7 @@ def lk_login(br: Chrome, u=USERNAME, p=PASSWORD) -> bool:
         while not verified_human(br):
             pass
         time.sleep(4)
-    cookies_get(br)
+    cookies_get(br, f"{WEBSITE_ALIAS}_cookies.pkl")
 
     return True
 
@@ -162,7 +162,7 @@ def main(br) -> None:
 
     br.get(LOGIN)
     # https://www.linkedin.com/jobs/search/?currentJobId=3341349350&f_E=2&geoId=102890719&keywords=python&start=750git
-    cookies_load(br)
+    cookies_load(br, f"{WEBSITE_ALIAS}_cookies.pkl")
     br.get(LOGIN)
     # Used while looking at the element text before clicking on it, thus skipping already-seen-jobs.
     print("Loading known jobs..")
