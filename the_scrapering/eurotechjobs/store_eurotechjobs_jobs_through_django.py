@@ -10,13 +10,8 @@ import threading
 import time
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import JavascriptException, NoSuchElementException, StaleElementReferenceException, \
-    ElementClickInterceptedException
-from selenium.webdriver.remote.webelement import WebElement
-from common.common import get_browser, UNIT_VALUES
-from eurotechjobs.site_info import SEARCH_URLS
-from common.cookies_store import cookies_get, cookies_load
+from common.common import get_browser
+from eurotechjobs.site_info import SEARCH_URLS, WEBSITE_ALIAS
 import os
 from django import setup
 from queue import Queue
@@ -67,7 +62,16 @@ def main(br: Chrome):
                 break
             item_html = item.get_attribute('innerHTML')
             job_description += item_html
-        print(1)
+        job_id = search_url.split("/")[-2]
+        job = JobPosting(
+            job_id=job_id,
+            title=title,
+            company_name=company,
+            description=job_description,
+            site_scraped_from=WEBSITE_ALIAS,
+            location=location,
+        )
+        UNSAVED_JOBS.put(job)
 
 
 if __name__ == "__main__":
