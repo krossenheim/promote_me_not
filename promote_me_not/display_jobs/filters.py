@@ -78,7 +78,6 @@ class JobPostingFilter(django_filters.FilterSet):
     )
 
     def include_marked_method(self, qs, name, value):
-        print(value)
         return qs.exclude(Q(marked=True) if not value else Q())
 
     def title_not_contains_method(self, qs, name, value):
